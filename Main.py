@@ -17,7 +17,6 @@ class main:
         init = InitializeBot(db,ind,api)
         ##########################
         init.resetBot()
-    
         test.backTest()
         
 

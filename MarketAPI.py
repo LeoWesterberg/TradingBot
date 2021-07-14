@@ -9,8 +9,8 @@ class MarketAPI:
     inverval = '2m'
     tz = pytz.timezone('Europe/Oslo')
     def __init__(self, stock = const.STOCK):
-        self.interval = '1m'
-        self.period='7d'
+        self.interval = '5m'
+        self.period='5d'
         self.stock = stock
 
     def getData(self,stock):

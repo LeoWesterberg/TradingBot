@@ -136,4 +136,3 @@ class Algorithms:
         prevInstance = (self.db.getRowAtIndex(currInstance["index"].tolist()[0] - 1))
         derivative = currInstance[index].tolist()[0] - prevInstance[index].tolist()[0] # TimeUnit MarketAPI.Period()
         return derivative
-

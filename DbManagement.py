@@ -22,7 +22,7 @@ class DbManagement:
         curr = self.psyCopgConn.cursor()
         return curr
 
-    def update(self):
+    def update(self): # MUST FIX
         curr = self.__createCursor()
         curr.execute("""SELECT * FROM "Data" ORDER BY index DESC LIMIT 1;""")
         result = curr.fetchall()
@@ -73,7 +73,9 @@ class DbManagement:
 WHERE r = %s"""
         curr.execute(SQL,(n,))
         result = curr.fetchall()
-        frame = DataFrame(result,columns=['rem','index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX])
+        frame = DataFrame(result,columns=['rem','index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',
+                                        const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX,const.MACD_LINE_INDEX,
+                                        const.SIGNAL_LINE_INDEX,const.MACD_HISTOGRAM_INDEX])
         frame = frame.drop(columns=['rem'])
 
         return frame
@@ -84,7 +86,9 @@ WHERE r = %s"""
 WHERE r <= %s"""
         curr.execute(SQL,(n,))
         result = curr.fetchall()
-        frame = DataFrame(result,columns=['rem','index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX])
+        frame = DataFrame(result,columns=['rem','index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',
+                                        const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX,const.MACD_LINE_INDEX,
+                                        const.SIGNAL_LINE_INDEX,const.MACD_HISTOGRAM_INDEX])
         frame = frame.drop(columns=['rem'])
 
         return frame
@@ -95,7 +99,9 @@ WHERE r <= %s"""
         SQL = """SELECT * FROM "Data" WHERE "Datetime" = (%s);""" # Note: no quotes
         curr.execute(SQL, (dateTime,)) # Note: no % operator
         result = curr.fetchall()
-        frame = DataFrame(result,columns=['index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX])
+        frame = DataFrame(result,columns=['index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',
+                                        const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX,const.MACD_LINE_INDEX,
+                                        const.SIGNAL_LINE_INDEX,const.MACD_HISTOGRAM_INDEX])
         return frame
 
     def getRowAtIndex(self, index):
@@ -103,7 +109,9 @@ WHERE r <= %s"""
         SQL = """SELECT * FROM "Data" WHERE "index" = (%s);""" # Note: no quotes
         curr.execute(SQL, (index,)) # Note: no % operator
         result = curr.fetchall()
-        frame = DataFrame(result,columns=['index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX])
+        frame = DataFrame(result,columns=['index','Datetime','Open', 'High', 'Low', 'Close', 'Adj Close','Volume',
+                                        const.RSI_INDEX,const.EMA_Long_INDEX, const.EMA_Short_INDEX,const.MACD_LINE_INDEX,
+                                        const.SIGNAL_LINE_INDEX,const.MACD_HISTOGRAM_INDEX])
         return frame
 
     
