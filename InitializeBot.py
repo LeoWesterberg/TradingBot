@@ -15,13 +15,12 @@ class InitializeBot:
     def resetBot(self):
         data = self.api.getData(self.api.stock)
         dates = data[const.DATETIME]
-        dataIndicatorsConcat = pd.concat([dates,self.ind.rsiInit(data,const.RSI_PERIOD),
+        dataIndicatorsConcat = pd.concat([data,self.ind.rsiInit(data,const.RSI_PERIOD),
                                                self.ind.emaInit(data,const.LONG_EMA),
                                                self.ind.emaInit(data,const.SHORT_EMA),
                                                self.ind.macdInit(data,26,12,9),
                                                self.ind.SmoothRsiInit(data,const.RSI_PERIOD,const.RSI_SMOOTH_EMA_PERIOD)],axis=1)
-        self.db.reset(data,"Data")
-        self.db.reset(dataIndicatorsConcat,"Indicators")
+        self.db.reset(dataIndicatorsConcat,"Data")
 
 
     def updateBot(self):

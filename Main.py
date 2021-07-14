@@ -18,7 +18,7 @@ class main:
         ##########################
 
         init.resetBot()
-        #test.backTest()
+        test.backTest()
         
 
        
