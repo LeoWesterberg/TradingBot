@@ -16,8 +16,9 @@ class main:
         test:Test = Test(db,algo)
         init = InitializeBot(db,ind,api)
         ##########################
+
         init.resetBot()
-        test.backTest()
+        #test.backTest()
         
 
        
