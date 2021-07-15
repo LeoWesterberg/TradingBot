@@ -18,8 +18,8 @@ class Test:
 
 
     def backTest(self):
-        for i in range(self.db.getPreviousRow("Data")[const.INDEX].tolist()[0]-100,1,-1): #-100 for propagating towards more accurate values
-            self.algo.strat1AtDate(self.db.getNthRow(i,"Data")[const.DATETIME].tolist()[0])
+        for i in range(self.db.getPreviousRow()[const.INDEX].tolist()[0]-100,1,-1): #-100 for propagating towards more accurate values
+            self.algo.strategy1(self.db.getNthRow(i)[const.DATETIME].tolist()[0])
         print("Profit:%s, Winn/Loss: %s/%s"%(sum(self.algo.profit),self.algo.nbrWin,self.algo.nbrLoss))
         self.showPlot()
 

@@ -1,4 +1,3 @@
-from typing import List
 from Indicators import Indicators
 from pandas.core.frame import DataFrame
 import pandas as pd
@@ -19,7 +18,7 @@ class DbManagement:
         self.api = api
 
 
-    def reset(self,data:DataFrame,tableName):
+    def reset(self,data:DataFrame,tableName="Data"):
         try:
             data.to_sql(con=self.sqlAlchConn, name=tableName, if_exists='replace')
         except:
@@ -32,22 +31,22 @@ class DbManagement:
 
 
 
-    def getNthRow(self,n:int,tableName) -> DataFrame:
+    def getNthRow(self,n:int,tableName="Data") -> DataFrame:
         SQL = sql.SQL("SELECT * FROM (SELECT row_number() OVER (ORDER BY index DESC) r, * FROM {}) q WHERE r = %s")
         return self.__getRowTemplate(n,SQL,tableName)
      
-    def getLastNthRow(self,n:int,tableName) -> DataFrame:
+    def getLastNthRow(self,n:int,tableName="Data") -> DataFrame:
         SQL = sql.SQL("SELECT * FROM (SELECT row_number() OVER (ORDER BY index DESC) r, * FROM {}) q WHERE r <= %s")
         return self.__getRowTemplate(n,SQL,tableName)
 
-    def getNbrOfRows(self,tableName):
+    def getNbrOfRows(self,tableName="Data"):
         self.getPreviousRow(tableName)[const.INDEX].tolist()[0]
 
-    def appendRow(self,data:DataFrame,tableName):
+    def appendRow(self,data:DataFrame,tableName="Data"):
         data.to_sql(con=self.sqlAlchConn, name=tableName, if_exists='append')
     
     
-    def appendColumnAtDate(self,dateTime,value,SQL,attr,tableName):
+    def appendColumnAD(self,dateTime,value,SQL,attr,tableName="Data"):
         curr = self.__createCursor()
         SQL = sql.SQL("""UPDATE {table} SET {attr} = %s where "Datetime" = %s""").format(attr=sql.Identifier(attr),table=sql.Identifier(tableName))
         curr.execute(SQL, (dateTime,value))
@@ -58,12 +57,12 @@ class DbManagement:
         self.psyCopgConn.commit()
 
 
-    def getPreviousRow(self,tableName) -> DataFrame:
+    def getPreviousRow(self,tableName="Data") -> DataFrame:
         return self.getNthRow(1,tableName)
     
     
 
-    def getRowAtDate(self, dateTime,tableName):
+    def getRowAD(self, dateTime,tableName="Data"):
         curr = self.__createCursor()
         SQL = sql.SQL("""SELECT * FROM {table} WHERE "Datetime" = %s""").format(table=sql.Identifier(tableName))
         curr.execute(SQL, (dateTime,)) # Note: no % operator
@@ -71,7 +70,7 @@ class DbManagement:
         frame = DataFrame(result,columns=['index'] + const.BASE_VALUES + const.ACTIVE_INDICATORS)
         return frame
 
-    def getRowAtIndex(self, index,tableName):
+    def getRowAtIndex(self, index,tableName="Data"):
         curr = self.__createCursor()
         SQL = sql.SQL("""SELECT * FROM {table} WHERE "index" = %s""").format(table=sql.Identifier(tableName))
         curr.execute(SQL, (index,))
@@ -80,7 +79,7 @@ class DbManagement:
         return frame
 
     
-    def tableToDataFrame(self,tableName)->DataFrame:
+    def tableToDataFrame(self,tableName="Data")->DataFrame:
         return pd.read_sql_table(tableName,self.sqlAlchConn)
 
 ################################ PRIVATE FUNCTIONS ##################################

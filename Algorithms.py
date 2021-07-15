@@ -1,4 +1,5 @@
 from numpy import double
+from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
 from Constants import Constants as const
 import datetime
@@ -14,135 +15,120 @@ class Algorithms:
     def __init__(self,db:DbManagement):
         self.db = db 
         
-    def strat1(self):
-        self.strat1AtDate(self.db.getPreviousRow[const.DATETIME])
 
-    def attributeDerivative(self,index):
-        try:
-            return self.attributeDerivativeAtDate(index,self.db.getPreviousRow("Data")[const.DATETIME])
-        except:
-            return self.attributeDerivativeAtDate(index,self.db.getPreviousRow("Data")[const.DATETIME])
-
-
-    def emaCrossOver(self):
+##### Strategy 1 works well when trend is mostly positive, but fails at stopping when curve dont recover after drop
+#####
+    def strategy1(self,dt:datetime) -> bool:
         
-        return self.emaLongToShortCrossAT(self.db.getPreviousRow("Data")[const.DATETIME])
-        
-    
-    def ema5OverEma12(self) -> bool:
-        return self.ema5DistToEma12AtDate(self.db.getPreviousRow("Data")[const.DATETIME])
-    
-    def ema5DistToEma12(self):
-        return self.ema5DistToEma12(self.db.getPreviousRow("Data")[const.DATETIME])
-
-    def rsi5MarginTemp(self,margin:int,rev:int):
-        return self.rsi5MarginTempAtDate(margin,rev,self.db.getPreviousRow("Data")[const.DATETIME])
-    
-    
-    def rsi5OverMargin(self):
-        return self.rsiOverMarginAtDate(self.db.getPreviousRow("Data")[const.DATETIME])
-    
-    def rsi5UnderMargin(self):
-        return self.rsi5UnderMarginAtDate(self.db.getPreviousRow("Data")[const.DATETIME])
-############################################## AT DATE ###############################################
-    def strat1AtDate(self,dt:datetime) -> bool:
         if(self.CURRENT_POSITION == const.POSITION_NONE):
-            if(self.emaShortToLongCrossAT(dt)):
-                self.crossDate = dt
-            if(self.rsiOverMarginAtDate(dt) and self.indiciesFromCrossOverAtDate(dt) <= 2): #Possible canidate for buy signal
-                if(self.isInstanceAfterNewDate(dt)):
-                    return
+            if(self.__emaShortLongCrossAD(dt)): self.crossDate = dt
+            if(self.__rsiOverMarginAD(dt) and self.__indiciesFromCrossOverAD(dt) <= 2 and not self.__isInstanceAfterNewDate(dt)):
+                
                 self.CURRENT_POSITION = const.POSITION_HOLD
-                self.CURRENT_BUY = self.db.getRowAtDate(dt)["Close"].tolist()[0]
+                self.CURRENT_BUY = self.db.getRowAD(dt)["Close"].tolist()[0]
+
                 self.buyDates.append(dt -datetime.timedelta(hours=2))
-                #print(dt)
                 self.buyClosings.append(self.CURRENT_BUY)
-                print("BUYING at %s"%self.db.getRowAtDate(dt)[const.DATETIME].tolist()[0])
+                print("BUYING at %s"%self.db.getRowAD(dt)[const.DATETIME].tolist()[0])
 
         elif(self.CURRENT_POSITION == const.POSITION_HOLD):
-            if(self.emaLongToShortCrossAT(dt) and self.rsi5UnderMarginAtDate(dt) or self.attributeDerivativeAtDate(const.EMA_Long_INDEX,dt) < 0
-            and self.CURRENT_BUY < self.db.getRowAtDate(dt,"Data")["Close"].tolist()[0] ):
+            emaCrossAndRsiDrop:bool = self.__emaLongShortCrossAD(dt) and self.__rsi5UnderMarginAD(dt)
+            attriDeriv:bool =  self.__attributeDerivativeAD(const.EMA_Long_INDEX,dt) < 0
+            buyBelowClose = self.CURRENT_BUY < self.db.getRowAD(dt)["Close"].tolist()[0]
+
+            if(emaCrossAndRsiDrop or attriDeriv < 0 and buyBelowClose):
                 self.CURRENT_POSITION = const.POSITION_NONE
-                closing = self.db.getRowAtDate(dt,"Data")["Close"].tolist()[0]
+                closing = self.db.getRowAD(dt)["Close"].tolist()[0]
                 earning = closing - self.CURRENT_BUY
+                
                 self.profit.append(earning)
                 self.sellDates.append(dt -datetime.timedelta(hours=2))
                 self.sellClosings.append(closing)
                 if(earning > 0): self.nbrWin += 1 
                 else: self.nbrLoss +=1
                 
-                print("SELLING at %s with %s profit"%(self.db.getRowAtDate(dt)[const.DATETIME].tolist()[0],earning))
+                print("SELLING at %s with %s profit"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning))
                 print("######################################################################")
     
 
 
-    def ema5DistToEma12AtDate(self,dt:datetime) -> bool: #check
-        return (self.db.getRowAtDate(dt,"Data")[const.EMA_Long_INDEX] - self.db.getRowAtDate(dt,"Data")[const.EMA_Short_INDEX]).tolist()[0]
+    def __attrDistBetweenDates(self,attr1,attr2,date1,date2):
+            return (self.db.getRowAD(date1)[attr1] - self.db.getRowAD(date2)[attr2]).tolist()[0]
 
-    def highBelowLongEmaAtDate(self,dt:datetime) -> bool: #check
-        return (self.db.getRowAtDate(dt,"Data")[const.HIGH_INDEX].tolist()[0] < self.db.getRowAtDate(dt,"Data")[const.EMA_Long_INDEX]).tolist()[0]
 
-    def lowBelowLongEmaAtDate(self,dt:datetime):
-        return (self.db.getRowAtDate(dt,"Data")[const.LOW_INDEX].tolist()[0] < self.db.getRowAtDate(dt,"Data")[const.EMA_Long_INDEX]).tolist()[0]
 
-    def indiciesFromCrossOverAtDate(self,dt:datetime):
+    def __indiciesFromCrossOverAD(self,dt:datetime):
         if(self.crossDate == -1):
-            return 1000 #large number larger than 3
+            return 10 #Only requiresddnf number larger than 3
         else:
-            return self.db.getRowAtDate(dt,"Data")["index"].tolist()[0] - self.db.getRowAtDate(self.crossDate,"Data")["index"].tolist()[0]
-        
-    def isInstanceAfterNewDate(self,dt:datetime):
-        indexBefore = self.db.getRowAtDate(dt,"Data")[const.INDEX].tolist()[0] - 1
-        prevDatetime = self.db.getRowAtIndex(indexBefore,"Data")[const.DATETIME].tolist()[0]
+            return self.__attrDistBetweenDates(const.INDEX,const.INDEX,dt,self.crossDate)
+
+
+
+    def __isInstanceAfterNewDate(self,dt:datetime):
+        indexBefore = self.db.getRowAD(dt)[const.INDEX].tolist()[0] - 1
+        prevDatetime = self.db.getRowAtIndex(indexBefore)[const.DATETIME].tolist()[0]
         if(abs(prevDatetime.hour - dt.hour > 1)):
             return True
         else:
             return False
-    def __rsi5MarginTempAtDate(self,margin:int,rev:int,dt:datetime):
-        currInstance = self.db.getRowAtDate(dt,"Data")[const.RSI_INDEX].tolist()[0]
+            
+
+
+    def __rsi5MarginTempAD(self,margin:int,rev:int,dt:datetime):
+        currInstance = self.db.getRowAD(dt)[const.RSI_INDEX].tolist()[0]
         if(rev*currInstance <= rev*self.RSI_MARGIN[margin]):
             return True
         else: return False
 
-    def rsiOverMarginAtDate(self,dt:datetime): #check
-        return self.__rsi5MarginTempAtDate(1,-1,dt)
+
+
+    def __rsiOverMarginAD(self,dt:datetime): #check
+        return self.__rsi5MarginTempAD(1,-1,dt)
     
-    def rsi5UnderMarginAtDate(self,dt:datetime): #check
-        return self.__rsi5MarginTempAtDate(0,1,dt)
 
-    def shortOverLongAtDate(self,dt:datetime) -> bool: #check
-        return (self.db.getRowAtDate(dt,"Data")[const.EMA_Long_INDEX] >= self.db.getRowAtDate(dt,"Data")[const.EMA_Short_INDEX]).tolist()[0]
 
-    def emaLongToShortCrossAT(self,dt:datetime): #check
-        currInstance = self.db.getRowAtDate(dt,"Data")
-        prevInstance = self.db.getRowAtIndex(currInstance["index"].tolist()[0] - 1,"Data")
-        prevEmaLong = prevInstance[const.EMA_Long_INDEX].tolist()[0]
-        currEmaLong = currInstance[const.EMA_Long_INDEX].tolist()[0]
-        prevEmaShort = prevInstance[const.EMA_Short_INDEX].tolist()[0]
-        currEmaShort = currInstance[const.EMA_Short_INDEX].tolist()[0]
-        if(prevEmaLong <= prevEmaShort and currEmaLong >= currEmaShort):
+    def __rsi5UnderMarginAD(self,dt:datetime): #check
+        return self.__rsi5MarginTempAD(0,1,dt)
+
+
+
+    def __emaLongShortCrossAD(self,dt:datetime): #check
+        currDf = self.db.getPreviousRow()
+        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
+
+        emaValues = self.__initEmaValues(currDf,prevDf)
+        if(emaValues(0) <= emaValues(2) and emaValues(1) >= emaValues(3)):
             return True
         else: return False
 
-    def emaShortToLongCrossAT(self,dt:datetime) -> bool: #check
-        currInstance = self.db.getRowAtDate(dt,"Data")
-        prevInstance = self.db.getRowAtIndex(currInstance["index"].tolist()[0] - 1,"Data")
-        prevEmaLong = prevInstance[const.EMA_Long_INDEX].tolist()[0]
-        currEmaLong = currInstance[const.EMA_Long_INDEX].tolist()[0]
-        prevEmaShort = prevInstance[const.EMA_Short_INDEX].tolist()[0]
-        currEmaShort = currInstance[const.EMA_Short_INDEX].tolist()[0]
-        if(prevEmaLong >= prevEmaShort and currEmaLong <= currEmaShort):
+
+
+    def __emaShortLongCrossAD(self,dt:datetime) -> bool: #check
+        currDf = self.db.getPreviousRow()
+        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
+
+        emaValues = self.__initEmaValues(currDf,prevDf)
+        if(emaValues[0] >= emaValues[2] and emaValues[1] <= emaValues[3]):
             return True
         else: return False
 
-    def attributeDerivativeAtDate(self,index,dt:datetime) -> double: #check
-        try:
-            currInstance = self.db.getRowAtDate(dt,"Data")
-            prevInstance = (self.db.getRowAtIndex(currInstance["index"].tolist()[0] - 1),"Data")
-            derivative = currInstance[index].tolist()[0] - prevInstance[index].tolist()[0] # TimeUnit MarketAPI.Period()
+
+
+    def __attributeDerivativeAD(self,index,dt:datetime) -> double: #check
+            derivative = self.__retrieveValue(self.currInstance[index]) - self.__retrieveValue(self.prevInstance[index]) # TimeUnit MarketAPI.Period()
             return derivative
-        except:
-            currInstance = self.db.getRowAtDate(dt,"Data")
-            prevInstance = (self.db.getRowAtIndex(currInstance["index"].tolist()[0] - 1),"Data")
-            derivative = currInstance[index].tolist()[0] - prevInstance[index].tolist()[0] # TimeUnit MarketAPI.Period()
-            return derivative
+
+
+
+    def __retrieveValue(self,df:DataFrame,attr:str):
+        return df[attr].to_list()[0]
+        
+
+
+    def __initEmaValues(self,currDf,PrevDf):
+        prevEmaLong = self.__retrieveValue(PrevDf,const.EMA_Long_INDEX)
+        currEmaLong = self.__retrieveValue(currDf,const.EMA_Long_INDEX)
+        prevEmaShort = self.__retrieveValue(PrevDf,const.EMA_Short_INDEX)
+        currEmaShort = self.__retrieveValue(currDf,const.EMA_Short_INDEX)
+        return (prevEmaLong,currEmaLong,prevEmaShort,currEmaShort)

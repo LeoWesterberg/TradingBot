@@ -3,7 +3,7 @@ class Constants:
 ####################STOCK INFO#########################
 
     tickers = ['AAPL','TSLA','GME','BTC-USD','ETH-USD']
-    STOCK = 'TSLA'
+    STOCK = 'AAPL'
 
 ######################SETTINGS#########################
 
