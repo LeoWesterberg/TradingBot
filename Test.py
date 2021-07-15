@@ -35,6 +35,10 @@ class Test:
 
         self.__addTrace(fig,const.EMA_Long_INDEX,dates)
         self.__addTrace(fig,const.EMA_Short_INDEX,dates)
+        self.__addTrace(fig,"Ema 200",dates)
+        self.__addTrace(fig,"Ema 50",dates)
+
+
 
         self.__addScatterPlot(fig,self.algo.buyClosings,self.algo.buyDates)
         self.__addScatterPlot(fig,self.algo.sellClosings,self.algo.sellDates)

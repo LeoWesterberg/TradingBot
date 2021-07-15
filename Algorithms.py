@@ -11,6 +11,8 @@ class Algorithms:
     profit,sellDates,sellClosings,buyDates,buyClosings= [],[],[],[],[]
     rsiTickDate = -1
     last10Closings = []
+    macdCrossDate= -1
+    dtForRSI = -1
 
 
 
@@ -61,39 +63,32 @@ class Algorithms:
     
 
     def strategy2(self,dt):
-        MACDLine = self.__getAttrDfAtDate(dt,const.MACD_INDEX)
-        MACDDiff= self.__getAttrDfAtDate(dt,const.MACD_DIFF_INDEX)
-        signalLine= self.__getAttrDfAtDate(dt,const.SIGNAL_INDEX)
-        smoothRsi = self.__getAttrDfAtDate(dt,const.RSI_SMOOTH_INDEX)
+        closing = self.__retrieveValue(self.db.getRowAD(dt),"Close")
+        ema200 = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_200_INDEX)
+        ema50 = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_50_INDEX)
+        emaShort = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_Short_INDEX)
+        emaLong = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_Long_INDEX)
+        macd = self.__retrieveValue(self.db.getRowAD(dt),const.MACD_INDEX)
+        smoothRsi = self.__retrieveValue(self.db.getRowAD(dt),const.RSI_SMOOTH_INDEX)
 
-        if(self.CURRENT_POSITION == const.POSITION_NONE):
-            if(smoothRsi >= const.RSI_UPPER_BOUND):
-                self.rsiTickDate = dt
-            #print("%s %s %s"%(MACDDiff, self.__attributeDerivativeAD(const.MACD_DIFF_INDEX,dt), self.__timeSinceRsiTick(dt)))
-            cond = MACDDiff > 0 and self.__attributeDerivativeAD(const.MACD_DIFF_INDEX,dt) > 0 and self.__timeSinceRsiTick(dt) <= 1
-            if(cond and not self.__isInstanceAfterNewDate(dt) or self.MACDCrossesSignal and smoothRsi >50):
-                self.rsiTickDate = -1
+        if(self.CURRENT_POSITION == const.POSITION_NONE and ema50 > ema200):
+            condition1 = self.MACDCrossesSignalBuySignal(dt) and self # macd line crossing of signal line from down up
+            condition2= self.MACDlineZeroCrossUp(dt) #macd line crossing of zero line from down up
+            if(condition1 and self.__attributeDerivativeAD("Ema 26",dt,2) > 0 and self.__attributeDerivativeAD("Ema 26",dt,2) > self.__attributeDerivativeAD("Ema 26",dt,3) ):
+
                 self.CURRENT_POSITION = const.POSITION_HOLD
-                self.CURRENT_BUY = self.db.getRowAD(dt)["Close"].tolist()[0]
+                self.CURRENT_BUY = closing
                 self.buyClosings.append(self.CURRENT_BUY)
                 self.buyDates.append(dt-datetime.timedelta(hours=2))
                 print("BUYING at %s"%self.db.getRowAD(dt)[const.DATETIME].tolist()[0])
                 
         elif(self.CURRENT_POSITION == const.POSITION_HOLD):
-            if(smoothRsi <= const.RSI_LOWER_BOUND):
-                self.rsiTickDate = dt
-            cond = MACDDiff < 0 and self.__attributeDerivativeAD(const.MACD_DIFF_INDEX,dt) < 0 and self.__timeSinceRsiTick(dt) <= 1
-            if(cond or self.signalCrossesMACD(dt) and  smoothRsi < 50):
-                self.negClosingsInARow = 0
+            condition= self.MACDlineZeroCrossUp(dt) #macd line crossing of zero line from down up
+            profitTake = 1.
+            if(ema50 < ema200 or self.signalCrossesMACDSellSignal(dt) and closing > self.CURRENT_BUY):
+
                 self.CURRENT_POSITION = const.POSITION_NONE
-                closing = self.db.getRowAD(dt)["Close"].tolist()[0]
                 earning = closing - self.CURRENT_BUY
-                if(self.last10Closings.__len__()< 5):
-                    self.last10Closings.append(closing)
-                else:
-                    self.last10Closings.pop(0)
-                    self.last10Closings.append(closing)
-                self.crossDate = -1
                 self.profit.append(earning)
                 self.sellDates.append(dt-datetime.timedelta(hours=2)) #-datetime.timedelta(hours=2)
                 self.sellClosings.append(closing)
@@ -108,26 +103,44 @@ class Algorithms:
 
 
 
-    def signalCrossesMACD(self,dt):
+    def signalCrossesMACDSellSignal(self,dt):
         currDf = self.db.getRowAD(dt)
         prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
-        currMacdDiff = self.__retrieveValue(prevDf,const.MACD_DIFF_INDEX)
         prevMACD = self.__retrieveValue(prevDf,const.MACD_INDEX)
         currMACD = self.__retrieveValue(currDf,const.MACD_INDEX)
         prevSignal = self.__retrieveValue(prevDf,const.SIGNAL_INDEX)
         currSignal = self.__retrieveValue(currDf,const.SIGNAL_INDEX)
-        return (prevMACD > prevSignal and currMACD <= currSignal and currMacdDiff > 0)
+        macdDer = self.__attributeDerivativeAD(const.MACD_INDEX,dt,3)
+        signalDer = self.__attributeDerivativeAD(const.SIGNAL_INDEX,dt,3)
+        return (prevMACD > prevSignal and currMACD <= currSignal )
 
-    def MACDCrossesSignal(self,dt):
+    def MACDCrossesSignalBuySignal(self,dt):
         currDf = self.db.getRowAD(dt)
         prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
-        currMacdDiff = self.__retrieveValue(prevDf,const.MACD_DIFF_INDEX)
         prevMACD = self.__retrieveValue(prevDf,const.MACD_INDEX)
         currMACD = self.__retrieveValue(currDf,const.MACD_INDEX)
         prevSignal = self.__retrieveValue(prevDf,const.SIGNAL_INDEX)
         currSignal = self.__retrieveValue(currDf,const.SIGNAL_INDEX)
-        return (prevMACD > prevSignal and currMACD <= currSignal and currMacdDiff > 0)
 
+        return (prevMACD <= prevSignal and currMACD > currSignal )
+
+    def histogramDirection(self,dt,dx):
+        self.__attributeDerivativeAD(const.MACD_DIFF_INDEX,dt,dx)
+
+    def MACDlineZeroCrossUp(self,dt):
+        currDf = self.db.getRowAD(dt)
+        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
+        prevMACD = self.__retrieveValue(prevDf,const.MACD_INDEX)
+        currMACD = self.__retrieveValue(currDf,const.MACD_INDEX)
+        return True if(prevMACD <= 0 and currMACD >= 0) else False
+        
+    def MACDlineZeroCrossFromDown(self,dt):
+        currDf = self.db.getRowAD(dt)
+        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
+        prevMACD = self.__retrieveValue(prevDf,const.MACD_INDEX)
+        currMACD = self.__retrieveValue(currDf,const.MACD_INDEX)
+        return True if(prevMACD >= 0 and currMACD <= 0) else False
+        
     def __timeSinceRsiTick(self,dt):
         if(self.rsiTickDate == -1):
             return 10 #Only requiresddnf number larger than 5
@@ -209,9 +222,9 @@ class Algorithms:
 
 
 
-    def __attributeDerivativeAD(self,index,dt:datetime) -> double: #check
+    def __attributeDerivativeAD(self,index,dt:datetime,dx) -> double: #check
         currDf = self.db.getRowAD(dt)
-        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - 1)
+        prevDf = self.db.getRowAtIndex(self.__retrieveValue(currDf,const.INDEX) - dx)
         derivative = self.__retrieveValue(currDf,index) - self.__retrieveValue(prevDf,index) # TimeUnit MarketAPI.Period()
         return derivative
 
