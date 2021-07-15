@@ -7,8 +7,8 @@ class Constants:
 
 ######################SETTINGS#########################
 
-    RSI_UPPER_BOUND = 70
-    RSI_LOWER_BOUND = 30
+    RSI_UPPER_BOUND = 60
+    RSI_LOWER_BOUND = 40
     RSI_PERIOD = 12
     LONG_EMA = 26
     SHORT_EMA = 12
@@ -33,6 +33,7 @@ class Constants:
     RSI_INDEX = "Rsi %s"%(RSI_PERIOD)
     EMA_Short_INDEX = "Ema %s"%(SHORT_EMA)
     EMA_Long_INDEX = "Ema %s"%(LONG_EMA)
+    EMA_RSI_INDEX = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
 
     POSITION_NONE = "NONE"
     POSITION_HOLD = "HOLD"

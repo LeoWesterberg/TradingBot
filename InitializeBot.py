@@ -18,7 +18,7 @@ class InitializeBot:
         dataIndicatorsConcat = pd.concat([data,self.ind.rsiInit(data,const.RSI_PERIOD),
                                                self.ind.emaInit(data,const.LONG_EMA),
                                                self.ind.emaInit(data,const.SHORT_EMA),
-                                               self.ind.macdInit(data,26,12,9),
+                                               self.ind.macdInit(data,12,7,5),
                                                self.ind.SmoothRsiInit(data,const.RSI_PERIOD,const.RSI_SMOOTH_EMA_PERIOD)],axis=1)
         self.db.reset(dataIndicatorsConcat,"Data")
 

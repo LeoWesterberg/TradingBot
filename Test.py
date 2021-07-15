@@ -18,8 +18,8 @@ class Test:
 
 
     def backTest(self):
-        for i in range(self.db.getPreviousRow()[const.INDEX].tolist()[0]-100,1,-1): #-100 for propagating towards more accurate values
-            self.algo.strategy1(self.db.getNthRow(i)[const.DATETIME].tolist()[0])
+        for i in range(self.db.getPreviousRow()[const.INDEX].tolist()[0]-30,1,-1): #-100 for propagating towards more accurate values
+            self.algo.strategy2(self.db.getNthRow(i)[const.DATETIME].tolist()[0])
         print("Profit:%s, Winn/Loss: %s/%s"%(sum(self.algo.profit),self.algo.nbrWin,self.algo.nbrLoss))
         self.showPlot()
 
@@ -45,12 +45,12 @@ class Test:
     ###################################### PRIVATE FUNCTIONS ############################################
 
     def __addScatterPlot(self,onFigure:FigureWidget,attrValues:list, attrDates:list):
-        onFigure.add_scatter(y=attrValues,x=list(map(lambda x:self.__dateToString(x), attrDates)),mode='markers')
+        onFigure.add_scatter(y=attrValues,x=list(map(lambda x:self.__dateToString(x),attrDates)),mode='markers')
         
     def __addTrace(self,fig:FigureWidget,attr:str,dates:Series):
         fig.add_trace(go.Scatter(x=dates,y=self.data[attr].to_list()))
 
     def __dateToString(self,date:datetime):
-        date.strftime("%m/%d - %H:%M:%S")
+        return date.strftime("%m/%d - %H:%M:%S")
 
     
