@@ -4,6 +4,8 @@ from Indicators import Indicators
 from DbManagement import DbManagement
 from MarketAPI import MarketAPI
 from Algorithms import Algorithms
+from NewAlgorithms import NewAlgorithms
+
 
 class main:
     def main():
@@ -13,10 +15,11 @@ class main:
         db = DbManagement(api) 
         ind = Indicators()
         algo = Algorithms(db)
-        test:Test = Test(db,algo)
         init = InitializeBot(db,ind,api)
-        ##########################
+        newAlgorithms = NewAlgorithms(db)
+        test:Test = Test(db,newAlgorithms)
 
+        ##########################
         init.resetBot()
         test.backTest()
         

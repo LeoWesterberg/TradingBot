@@ -14,7 +14,7 @@ class MarketAPI:
 
     def getData(self,stock) -> DataFrame:
         data = yf.download(tickers=stock, period=self.period,interval=self.interval)
-        data = self.__applySettings(data)
+        data = self.__applySettings(data).rename(columns={'Date': 'Datetime'})
         return data
 
 
@@ -29,7 +29,7 @@ class MarketAPI:
 
     def getDataSince(self, start) -> DataFrame:
         data = yf.download(tickers=self.stock,start=start,interval=self.interval)
-        data = self.applySettings(data).rename(columns={'Date': 'Datetime'})
+        data = self.__applySettings(data).rename(columns={'Date': 'Datetime'})
         return data
         
 

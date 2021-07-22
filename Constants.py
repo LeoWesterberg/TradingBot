@@ -1,9 +1,10 @@
+
 class Constants:
 
 ####################STOCK INFO#########################
 
     tickers = ['AAPL','TSLA','GME','BTC-USD','ETH-USD']
-    STOCK = 'TSLA'
+    STOCK = 'AAPL'
 
 ######################SETTINGS#########################
 
@@ -11,10 +12,11 @@ class Constants:
     RSI_LOWER_BOUND = 40
     RSI_PERIOD = 12
     LONG_EMA = 26
-    SHORT_EMA = 12
+    SHORT_EMA = 7
     RSI_SMOOTH_EMA_PERIOD = 3
-    TICKER_INTERVAL = 1 #In minutes
-    TICKER_PERIOD = 5 #In days
+    TICKER_INTERVAL = 15 #In minutes
+    TICKER_PERIOD = 60 #In days
+    RR_RATIO = 1.5
 
 ##################ATTRIBUTE STRINGS#####################
     INDEX = "index"
@@ -35,13 +37,13 @@ class Constants:
     EMA_Long_INDEX = "Ema %s"%(LONG_EMA)
     EMA_RSI_INDEX = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
     EMA_200_INDEX = "Ema 200"
-    EMA_50_INDEX = "Ema 100"
+    EMA_100_INDEX = "Ema 100"
 
 
     POSITION_NONE = "NONE"
     POSITION_HOLD = "HOLD"
 
-    ACTIVE_INDICATORS = [RSI_INDEX,EMA_Long_INDEX,EMA_Short_INDEX,EMA_50_INDEX,EMA_200_INDEX,MACD_INDEX,SIGNAL_INDEX,MACD_DIFF_INDEX,RSI_SMOOTH_INDEX]
+    ACTIVE_INDICATORS = [RSI_INDEX,EMA_Long_INDEX,EMA_Short_INDEX,EMA_100_INDEX,EMA_200_INDEX,MACD_INDEX,SIGNAL_INDEX,MACD_DIFF_INDEX,RSI_SMOOTH_INDEX]
     BASE_VALUES = [DATETIME,OPEN_INDEX,HIGH_INDEX,LOW_INDEX,CLOSE_INDEX,ADJ_CLOSE_INDEX,VOLUME_INDEX]
 
 

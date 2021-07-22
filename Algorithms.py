@@ -27,8 +27,7 @@ class Algorithms:
         
         if(self.CURRENT_POSITION == const.POSITION_NONE):
            
-            if(self.__emaShortLongCrossAD(dt)): 
-                self.crossDate = dt
+            if(self.__emaShortLongCrossAD(dt)): self.crossDate = dt
 
             if(self.__rsiOverMarginAD(dt) and self.__indiciesFromCrossOverAD(dt) <= 1 and not self.__isInstanceAfterNewDate(dt)):
                 self.CURRENT_POSITION = const.POSITION_HOLD
@@ -40,14 +39,15 @@ class Algorithms:
 
         elif(self.CURRENT_POSITION == const.POSITION_HOLD):
             
-            if(self.__closeEmaLongCrossAD(dt)): 
-                self.crossDate = dt
+            if(self.__closeEmaLongCrossAD(dt)): self.crossDate = dt
 
 
             crossLess = self.__rsi5UnderMarginAD(dt) and self.__indiciesFromCrossOverAD(dt) <= 1
             attriDeriv:bool =  self.__attributeDerivativeAD(const.EMA_Long_INDEX,dt) < 0
             buyBelowClose = self.CURRENT_BUY < self.db.getRowAD(dt)["Close"].tolist()[0]
+
             if(crossLess or attriDeriv < 0 and buyBelowClose):
+                
                 self.CURRENT_POSITION = const.POSITION_NONE
                 closing = self.db.getRowAD(dt)["Close"].tolist()[0]
                 earning = closing - self.CURRENT_BUY
@@ -66,15 +66,12 @@ class Algorithms:
         closing = self.__retrieveValue(self.db.getRowAD(dt),"Close")
         ema200 = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_200_INDEX)
         ema50 = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_50_INDEX)
-        emaShort = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_Short_INDEX)
-        emaLong = self.__retrieveValue(self.db.getRowAD(dt),const.EMA_Long_INDEX)
         macd = self.__retrieveValue(self.db.getRowAD(dt),const.MACD_INDEX)
-        smoothRsi = self.__retrieveValue(self.db.getRowAD(dt),const.RSI_SMOOTH_INDEX)
 
         if(self.CURRENT_POSITION == const.POSITION_NONE and ema50 > ema200):
             condition1 = self.MACDCrossesSignalBuySignal(dt) and self # macd line crossing of signal line from down up
-            condition2= self.MACDlineZeroCrossUp(dt) #macd line crossing of zero line from down up
-            if(condition1 and self.__attributeDerivativeAD("Ema 26",dt,2) > 0 and self.__attributeDerivativeAD("Ema 26",dt,2) > self.__attributeDerivativeAD("Ema 26",dt,3) ):
+            condition2= macd < 0 # For confirmation that the crossing is below the zero line
+            if(condition1 and condition2 and self.__attributeDerivativeAD("Ema 26",dt,2) > 0 and self.__attributeDerivativeAD("Ema 26",dt,2) > self.__attributeDerivativeAD("Ema 26",dt,3) ):
 
                 self.CURRENT_POSITION = const.POSITION_HOLD
                 self.CURRENT_BUY = closing
