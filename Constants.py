@@ -4,7 +4,7 @@ class Constants:
 ####################STOCK INFO#########################
 
     tickers = ['AAPL','TSLA','GME','BTC-USD','ETH-USD']
-    STOCK = 'AAPL'
+    STOCK = 'TSLA'
 
 ######################SETTINGS#########################
 
@@ -12,10 +12,10 @@ class Constants:
     RSI_LOWER_BOUND = 40
     RSI_PERIOD = 12
     LONG_EMA = 26
-    SHORT_EMA = 7
+    SHORT_EMA = 5
     RSI_SMOOTH_EMA_PERIOD = 3
-    TICKER_INTERVAL = 15 #In minutes
-    TICKER_PERIOD = 60 #In days
+    TICKER_INTERVAL = 5 #In minutes
+    TICKER_PERIOD = 30 #In days
     RR_RATIO = 1.5
 
 ##################ATTRIBUTE STRINGS#####################

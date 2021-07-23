@@ -1,6 +1,7 @@
 from numpy import NaN 
 from pandas.core.frame import DataFrame
 import pandas as pd
+
 class Indicators:
     
 
@@ -64,7 +65,9 @@ class Indicators:
         columnName = "Ema %s(Rsi %s)"%(emaWindow,rsiPeriod)
         return pd.DataFrame(rsiList + smoothRsiRes,columns=[columnName])
 
+    
 
+        
 ###################################### PRIVATE FUNCTIONS ############################################
     def __emaTemplate(self,data:DataFrame,initialEma,windowSize:int,templateDiff:int,attr:str = "Close"):
         emaList = []

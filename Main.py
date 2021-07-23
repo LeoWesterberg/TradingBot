@@ -5,6 +5,7 @@ from DbManagement import DbManagement
 from MarketAPI import MarketAPI
 from Algorithms import Algorithms
 from NewAlgorithms import NewAlgorithms
+from OrderManagement import OrderManagement
 
 
 class main:
@@ -20,8 +21,10 @@ class main:
         test:Test = Test(db,newAlgorithms)
 
         ##########################
-        init.resetBot()
-        test.backTest()
+        order_manag = OrderManagement()
+
+        #init.resetBot() 
+        #test.backTest()
         
 
        

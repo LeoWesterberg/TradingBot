@@ -1,10 +1,9 @@
 from pandas.core.frame import DataFrame
-import pytz
 import yfinance as yf
 from Constants import Constants as const
 
+
 class MarketAPI:
-    tz = pytz.timezone('Europe/Oslo')
     def __init__(self):
         self.interval = '%sm'%const.TICKER_INTERVAL
         self.period='%sd'%const.TICKER_PERIOD
@@ -18,13 +17,10 @@ class MarketAPI:
         return data
 
 
-    ###################################### PRIVATE FUNCTIONS ############################################
-
     def __applySettings(self,data:DataFrame) -> DataFrame:
         data = data.tz_convert('Europe/Oslo',level=0)
         data.reset_index(inplace=True)
         return data
-
 
 
     def getDataSince(self, start) -> DataFrame:

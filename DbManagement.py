@@ -5,11 +5,12 @@ import psycopg2
 from sqlalchemy import create_engine
 from Constants import Constants as const
 from psycopg2 import sql
+from OrderCredentials import OrderCredentials as Auth
 
 
 class DbManagement:
 
-    psyCopgConn = psycopg2.connect(database="brain", user='postgres', password='***REMOVED***')
+    psyCopgConn = psycopg2.connect(database="brain", user='postgres', password= Auth.db_pass)
     conn_path = '***REMOVED***'
     sqlAlchConn = create_engine(conn_path).connect()
     ind:Indicators = Indicators()
