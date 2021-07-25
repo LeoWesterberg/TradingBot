@@ -14,7 +14,6 @@ class InitializeBot:
     
     def resetBot(self):
         data = self.api.getData(self.api.stock)
-        dates = data[const.DATETIME]
         dataIndicatorsConcat = pd.concat([data,self.ind.rsiInit(data,const.RSI_PERIOD),
                                                self.ind.emaInit(data,const.LONG_EMA),
                                                self.ind.emaInit(data,const.SHORT_EMA),

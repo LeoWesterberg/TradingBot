@@ -21,10 +21,11 @@ class main:
         test:Test = Test(db,newAlgorithms)
 
         ##########################
-        order_manag = OrderManagement()
+        init.resetBot() 
+        #order_manag = OrderManagement()
 
-        #init.resetBot() 
-        #test.backTest()
+        #order_manag.buyOrder('Investor B',1)
+        test.backTest()
         
 
        

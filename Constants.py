@@ -1,12 +1,9 @@
-
+import enum
 class Constants:
 
-####################STOCK INFO#########################
 
-    tickers = ['AAPL','TSLA','GME','BTC-USD','ETH-USD']
-    STOCK = 'TSLA'
-
-######################SETTINGS#########################
+    TICKERS = ['AAPL','TSLA','GME','BTC-USD','ETH-USD']
+    STOCK = 'BTC-USD'
 
     RSI_UPPER_BOUND = 60
     RSI_LOWER_BOUND = 40
@@ -18,7 +15,6 @@ class Constants:
     TICKER_PERIOD = 30 #In days
     RR_RATIO = 1.5
 
-##################ATTRIBUTE STRINGS#####################
     INDEX = "index"
     DATETIME = "Datetime"
     OPEN_INDEX = "Open"
