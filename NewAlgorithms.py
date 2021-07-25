@@ -106,13 +106,12 @@ class NewAlgorithms:
     
         gen_trend_condition = self.attr1_over_attr2(const.CLOSE_INDEX,const.EMA_200_INDEX,dt)
         macd_condition = self.macd_crossover(dt) and self.macd_under_zero_line(dt)
-        local_trend_condition = self.attr_secant(dt,const.CLOSE_INDEX,5)  < 0
+        #local_trend_condition = self.attr_secant(dt,const.CLOSE_INDEX,2)  < 0
 
-        if(gen_trend_condition and macd_condition and len(self.current_orders) == 0 and local_trend_condition):
-            print(local_trend_condition)
+        if(gen_trend_condition and macd_condition and len(self.current_orders) == 0):# and local_trend_condition):
                 
-            stop_loss = self.recent_pullback_value(dt,search_range=15)
-            stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX) if (stop_loss == -1 or stop_loss < current_close) else stop_loss
+            #stop_loss = self.recent_pullback_value(dt,search_range=15)
+            stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss
             
             risk = current_close - stop_loss
             take_profit = current_close + risk * const.RR_RATIO
@@ -147,8 +146,8 @@ class NewAlgorithms:
 
                 if(current_close >= i.profit_take):
                     print("SELLING at %s with %s profit (CLOSING: %s, DUE: PROFIT_TAKE)"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning,current_close))
-                elif(i.stop_loss == i.buy_closing and current_close < i.stop_loss_mid):
-                    print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS_MID)"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning,current_close))
+               # elif(i.stop_loss == i.buy_closing and current_close < i.stop_loss_mid):
+                   #print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS_MID)"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning,current_close))
                 elif(current_close < i.stop_loss):
                     print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS)"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning, current_close))
                 print("######################################################################")
