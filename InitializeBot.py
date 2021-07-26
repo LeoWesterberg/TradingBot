@@ -1,54 +1,60 @@
 from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
-from Indicators import Indicators as Ind
-from MarketAPI import MarketAPI as API
+from Indicators import Indicators
+from MarketAPI import MarketAPI
 import pandas as pd
 from Constants import Constants as const
 
 class InitializeBot:
 
-    def __init__(self,db:DbManagement, ind:Ind, api:API):
-        self.api = api
+    def __init__(self, db:DbManagement, indicator:Indicators, market_api:MarketAPI):
+        self.market_api = market_api
         self.db = db
-        self.ind = ind
+        self.indicator = indicator
     
-    def resetBot(self):
-        data = self.api.getData(self.api.stock)
-        dataIndicatorsConcat = pd.concat([data,self.ind.rsiInit(data,const.RSI_PERIOD),
-                                               self.ind.emaInit(data,const.LONG_EMA),
-                                               self.ind.emaInit(data,const.SHORT_EMA),
-                                               self.ind.emaInit(data,100),
-                                               self.ind.emaInit(data,200),
-                                               self.ind.macdInit(data,26,12,9),
-                                               self.ind.SmoothRsiInit(data,const.RSI_PERIOD,const.RSI_SMOOTH_EMA_PERIOD)],axis=1)
-        self.db.reset(dataIndicatorsConcat,"Data")
 
 
-    def updateBot(self):
-        previousRow = self.db.getPreviousRow()
+    def reset_bot(self) -> None:
+        data = self.market_api.get_data(self.market_api.stock)
+        indicator_data_frame = pd.concat([data,self.indicator.rsi_init(data, const.RSI_PERIOD),
+                                               self.indicator.ema_init(data, const.LONG_EMA),
+                                               self.indicator.ema_init(data, const.SHORT_EMA),
+                                               self.indicator.ema_init(data, 100),
+                                               self.indicator.ema_init(data, 200),
+                                               self.indicator.macd_init(data, 26, 12, 9),
+                                               self.indicator.smooth_rsi_init(data, const.RSI_PERIOD, const.RSI_SMOOTH_EMA_PERIOD)], axis=1)
+        self.db.reset(indicator_data_frame,"Data")
 
-        prevShortEma = self.__retrieveValue(previousRow,const.EMA_Short_INDEX)
-        prevLongEma = self.__retrieveValue(previousRow,const.EMA_Long_INDEX)
-        prevIndex = self.__retrieveValue(previousRow,const.INDEX)
-        requestDate = self.__retrieveValue(previousRow,const.DATETIME)
-        data:DataFrame = self.api.getDataSince(requestDate).iloc[1: , :]
+
+
+# WORK TO DO ON UPDATE BOT
+    def update_bot(self) -> None:
+        previous_row = self.db.get_previous_row()
+
+        prev_short_ema = self.__retrieveValue(previous_row,const.EMA_Short_INDEX)
+        prev_long_ema = self.__retrieveValue(previous_row,const.EMA_Long_INDEX)
+        prev_index = self.__retrieveValue(previous_row,const.INDEX)
+        request_date = self.__retrieveValue(previous_row,const.DATETIME)
+        data:DataFrame = self.market_api.get_data_since(request_date).iloc[1: , :]
         
         # CALCULATING NEW EMAS BASED ON PREVIOUS ONES
-        newShortEma = self.ind.updateEma(data,const.SHORT_EMA,prevShortEma)
-        newLongEma = self.ind.updateEma(data,const.LONG_EMA,prevLongEma)   
+        newShortEma = self.indicator.update_ema(data,const.SHORT_EMA,prev_short_ema)
+        newLongEma = self.indicator.update_ema(data,const.LONG_EMA,prev_long_ema)   
         dropColumns = ['index'] + const.ACTIVE_INDICATORS
 
         # CALCULATING NEW RSI VALUE BASED ON PREVIOUS 150(DUE TO INCREASING ACCURACY) ROWS
-        newRsi:DataFrame =self.ind.rsiInit(self.db.getLastNthRow(150).iloc[::-1].drop(columns=['index']+const.ACTIVE_INDICATORS).append(data),5)[150:]
+        newRsi:DataFrame =self.indicator.rsi_init(self.db.get_last_nth_rows(150).iloc[::-1].drop(columns=['index']+const.ACTIVE_INDICATORS).append(data),5)[150:]
         newRsi.reset_index(inplace=True)
 
         #CONFIGURING AND CONCATENATING RESULTS AND ADDING TO DATABASE
         data.reset_index(inplace=True)
-        res = pd.concat([data.drop(columns='index'),newRsi.drop(columns='index'),prevShortEma,prevLongEma],axis=1)
-        res.index = range(prevIndex+1,prevIndex+len(res)+1)
-        self.db.appendRow(res)
+        res = pd.concat([data.drop(columns='index'),newRsi.drop(columns='index'),prev_short_ema,prev_long_ema],axis=1)
+        res.index = range(prev_index+1,prev_index+len(res)+1)
+        self.db.append_row(res)
 
-    def __retrieveValue(self,df:DataFrame,attr:str):
+
+
+    def __retrieveValue(self,df:DataFrame,attr:str) -> DataFrame:
         return df[attr].to_list()[0]
 
 

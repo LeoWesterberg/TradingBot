@@ -6,6 +6,7 @@ from MarketAPI import MarketAPI
 from Algorithms import Algorithms
 from NewAlgorithms import NewAlgorithms
 from OrderManagement import OrderManagement
+from Credentials import Credentials as Auth
 
 
 class main:
@@ -13,7 +14,7 @@ class main:
 
         #INITIALIZING ALL NECESSARY OBJECTS
         api =  MarketAPI() 
-        db = DbManagement(api) 
+        db = DbManagement() 
         ind = Indicators()
         algo = Algorithms(db)
         init = InitializeBot(db,ind,api)
@@ -21,14 +22,14 @@ class main:
         test:Test = Test(db,newAlgorithms)
 
         ##########################
-        init.resetBot() 
-        #order_manag = OrderManagement()
 
-        #order_manag.buyOrder('Investor B',1)
+        init.reset_bot() 
+        #order_manag = OrderManagement()
+        print(db.get_nbr_of_rows())
         test.backTest()
         
 
-       
+     
       
 
 
