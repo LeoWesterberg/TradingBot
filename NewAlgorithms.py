@@ -3,29 +3,27 @@ from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
 from Constants import Constants as const
 import datetime
-from OrderManagement import Order,OrderManagement
+from OrderManagement import OrderManagement
 from scipy.signal import find_peaks
 
 
 
 class NewAlgorithms:
-    current_orders = []  
-    profit = 0
-    past_orders = []
-    macd_closings = []
-    macd_dates = []
     
-
     def __init__(self, db:DbManagement):
         self.db = db 
-        order_management:OrderManagement = OrderManagement()
+        self.order_management:OrderManagement = OrderManagement()
+
 
 
     def retrieveValue(self, df:DataFrame, attr:str):
         return df[attr].to_list()[0]
 
+
+
     def retrieve_value_dt(self, dt, attr:str):
         return self.db.get_row_at_date(dt)[attr].to_list()[0]
+
 
 
     def attr1_over_attr2(self, attrOver, attrUnder, dt):    
@@ -35,26 +33,31 @@ class NewAlgorithms:
         return current_attr_over > current_attr_under
 
 
+
     def macd_crossover(self, dt):
         previous_date = self.get_previous_date(dt)
-
         prev_macd_stat = self.attr1_over_attr2(const.MACD_INDEX,const.SIGNAL_INDEX,previous_date)
         current_macd_stat = self.attr1_over_attr2(const.MACD_INDEX,const.SIGNAL_INDEX,dt) 
+        
         return current_macd_stat and not prev_macd_stat
+
+
     
     def signal_crossover(self, dt):
         previous_date = self.get_previous_date(dt)
-
         prev_macd_stat = self.attr1_over_attr2(const.SIGNAL_INDEX,const.MACD_INDEX,previous_date)
         current_macd_stat = self.attr1_over_attr2(const.SIGNAL_INDEX,const.MACD_INDEX,dt) 
+        
         return current_macd_stat and not prev_macd_stat
     
 
+
     def attr_secant(self,dt,attr,window):
-        
         prev_date = self.get_previous_date(dt)
+
         for i in range(1,window):
             prev_date = self.get_previous_date(prev_date)
+
         return self.retrieve_value_dt(dt,attr) - self.retrieve_value_dt(prev_date,attr)
 
 
@@ -62,27 +65,34 @@ class NewAlgorithms:
     def macd_under_zero_line(self,dt):
         return self.retrieve_value_dt(dt,const.MACD_INDEX) < 0
 
+
+
     def get_previous_date(self,dt):
         previousIndex = self.retrieve_value_dt(dt,const.INDEX)  - 1     
+        
         return self.retrieveValue(self.db.get_row_at_index(previousIndex),const.DATETIME)
+
+
 
     def short_long_ema_cross(self,dt:datetime): #check
         previous_date = self.get_previous_date(dt)
-
-
         curr_ema_stat = self.attr1_over_attr2(const.EMA_Short_INDEX,const.EMA_Long_INDEX,dt)
         prev_ema_stat = self.attr1_over_attr2(const.EMA_Short_INDEX,const.EMA_Long_INDEX,previous_date)
-
+        
         return curr_ema_stat and not prev_ema_stat
 
 
     def all_pullback_indicies(self):
         data = self.db.get_table()
         smooth_closings = data[const.EMA_Short_INDEX].values
+        
         return find_peaks(-smooth_closings,distance=5,prominence=self.retrieveValue(self.db.get_previous_row(),const.CLOSE_INDEX) * 0.001)[0]
     
+
+
     def recent_pullback_value(self,dt,search_range):
         data = self.db.get_row_at_date(dt)
+
         for i in range(search_range):
             dt = self.get_previous_date(dt)
             data = data.append(self.db.get_row_at_date(dt))
@@ -90,67 +100,51 @@ class NewAlgorithms:
         data = data.iloc[::-1]  
         smooth_closings = data[const.CLOSE_INDEX].values
         nearby_peaks = find_peaks(-smooth_closings,distance=10,prominence=self.retrieveValue(self.db.get_row_at_date(dt),const.CLOSE_INDEX) * 0.001)[0]
-        
+       
         return -1 if len(nearby_peaks) == 0 else ([data[const.CLOSE_INDEX].to_list()[i] for i in nearby_peaks][-1])
 
-        
 
-##############################################################################################################################
+        
     def buy_signal(self,dt):
         gen_trend_condition = self.attr1_over_attr2(const.EMA_Short_INDEX,const.EMA_200_INDEX,dt)
         macd_condition = self.macd_crossover(dt) and self.macd_under_zero_line(dt)
-        #if(macd_condition):
-        #    self.macd_closings.append(current_close)
-        #    self.macd_dates.append(dt -datetime.timedelta(hours=2))
-        return gen_trend_condition and macd_condition and len(self.current_orders) == 0 # and local_trend_condition):
+        
+        return gen_trend_condition and macd_condition # and local_trend_condition):
 
 
 
     def sell_signal(self,dt,stop_loss,take_profit):
         current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX)
+        
         return current_close >= take_profit or current_close <= stop_loss #or dt.hour == 21 and dt.minute == 60-const.TICKER_INTERVAL
 
 
 
-    def __initialize_sell_order(self, order:Order, dt:datetime, current_close:float) -> None:
-        earning = current_close - order.buy_closing
-        order.sell_date = dt-datetime.timedelta(hours=2)
-        order.sell_closing = current_close
-        order.active = False
-        self.profit += earning
-        self.current_orders.remove(order)
-        self.past_orders.append(order)
-        if(current_close >= order.profit_take):
-            print("SELLING at %s with %s profit (CLOSING: %s, DUE: PROFIT_TAKE)"%(dt,earning,current_close))
-
-        elif(current_close < order.stop_loss):
-            print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS)"%(dt,earning, current_close))
-
-        print("######################################################################")
-    
+    def __initialize_sell_order(self, order_id) -> None:
+        self.order_management.sell_order(order_id)
+        
 
 
     def __initialize_buy_order(self, dt, current_close:float) -> None:
         stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
         risk = current_close - stop_loss
         take_profit = current_close + risk * const.RR_RATIO
-        stop_loss_mid = current_close + risk
-        order = Order(dt-datetime.timedelta(hours=2),current_close,stop_loss,take_profit,stop_loss_mid)
-        self.current_orders.append(order)
-        return order
+        self.order_management.buy_order(stop_loss, take_profit)
+
 
 
     def strategy(self, dt):
         current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX)
 
         if(self.buy_signal(dt)):
-            order = self.__initialize_buy_order(dt,current_close)
-            print("BUYING at %s (%s,%s)"%(dt,order.stop_loss,order.profit_take))
+            self.__initialize_buy_order(dt,current_close)
+
+        for index, row in self.order_management.current_holdings.iterrows():
+            if(self.sell_signal(dt,row["Stop loss"],row["Profit take"])):
+                self.__initialize_sell_order(row["Order id"])
+                
             
             
-        for i in self.current_orders: 
-            if(self.sell_signal(dt,i.stop_loss,i.profit_take)):
-                self.__initialize_sell_order(i,dt,current_close)
 
 
             

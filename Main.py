@@ -19,15 +19,17 @@ class main:
         algo = Algorithms(db)
         init = InitializeBot(db,ind,api)
         newAlgorithms = NewAlgorithms(db)
-        test:Test = Test(db,newAlgorithms)
+       # test:Test = Test(db,newAlgorithms)
 
         ##########################
         #init.reset_bot()
-        init.update_bot()
+        #init.update_bot()
         test = Test(db,newAlgorithms)
+        init.reset_bot()
         test.backTest()
-        #order_manag = OrderManagement()
-        #order_manag.buy_order('ERIC',1)
+
+       # order_manag = OrderManagement()
+        #print(order_manag.buy_order(1,1))
         #print(db.get_nbr_of_rows())
     
         

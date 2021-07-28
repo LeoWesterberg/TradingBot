@@ -2,7 +2,7 @@ class Constants:
 
 
     TICKERS = ['AAPL', 'TSLA', 'GME', 'BTC-USD', 'ETH-USD']
-    STOCK = 'ETH-USD'
+    STOCK = 'AAPL'
 
     RSI_UPPER_BOUND =       60
     RSI_LOWER_BOUND =       40

@@ -1,28 +1,23 @@
 import datetime
 import hashlib
+import random
+from pandas.core.frame import DataFrame
 import pyotp
-from avanza import Avanza, TimePeriod, OrderType
+from Constants import Constants as const
+from avanza import Avanza, OrderType
 from Credentials import Credentials as Auth
 from datetime import date
 import datetime
-
-class Order:
-    sell_closing:float
-    sell_date:datetime
-    active:True
-    second_profit_take = False
-
-    def __init__(self,buy_date:datetime, buy_closing:float, stop_loss:float, profit_take:float, stop_loss_mid:float):
-        self.buy_date = buy_date
-        self.buy_closing = buy_closing
-        self.stop_loss = stop_loss
-        self.profit_take = profit_take
-        self.stop_loss_mid = stop_loss_mid
-
-
+import pandas as pd
 
 class OrderManagement:
+    
+
     def __init__(self):
+        self.ORDER_COLUMNS =  ["Order id","Stock","Datetime Buy", "Buy", "Stop loss", "Profit take"]
+        self.current_holdings = DataFrame(columns=self.ORDER_COLUMNS)
+        self.previous_holdings = DataFrame(columns=self.ORDER_COLUMNS + ["Datetime Sell","Sell"])
+
         self.totp = pyotp.TOTP(Auth.AVANZA_TOTP_SECRET, digest=hashlib.sha1)
         self.avanza = Avanza({
         'username': Auth.AVANZA_USERNAME,
@@ -32,40 +27,57 @@ class OrderManagement:
 
 
 
-    def __place_order(self, type:OrderType, stock_name, volume:int):
-        self.avanza.place_order(
+    def __place_order(self, type:OrderType,  volume:int):
+        return self.avanza.place_order(
             account_id=Auth.AVANZA_ACCOUNT_ID,
-            order_book_id=self.get_stock_id(stock_name),
+            order_book_id=self.__get_stock_id(),
             order_type= type,
-            price=self.get_latest_stock_price(stock_name),
+            price=self.get_latest_stock_price(),
             valid_until=date.fromisoformat('%s'%(date.today().strftime("%Y-%m-%d"))),
-            volume=volume)
+            volume=volume) 
 
 
 
-    def buy_order(self,stock_name,volume):
-        result = self.__place_order(OrderType.BUY, stock_name, volume)
-
-        #if(result.get('status') == 'ERROR'):
+    def buy_order(self,stop_loss,profit_take):
+       # result = self.__place_order(OrderType.BUY, 1)
+       # #if(result.get('status') == 'ERROR'):
         #    self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
+        #    return "Failure"
+       # else: 
+            order_id:int = random.randint(3, 90) #result.get("orderId")
+            buy_price = self.get_latest_stock_price()
+            dt = datetime.datetime.now()
+            order = DataFrame([[order_id,const.STOCK,dt,buy_price,stop_loss,profit_take]],columns=self.ORDER_COLUMNS)
+            self.current_holdings =  self.current_holdings.append(order)
+            return "Success"
 
 
 
-    def sell_order(self,stock_name,volume):
-        result = self.__place_order(OrderType.SELL, stock_name, volume)
+
+    def sell_order(self,orderId):
+       # result = self.__place_order(OrderType.SELL,1)
 
        # if(result.get('status') == 'ERROR'):
        #     self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
+      #      return "Failure"
+      #  else: 
+        order = self.current_holdings.loc[self.current_holdings["Order id"] == orderId]
+        sell_price = self.get_latest_stock_price()
+        sell_df = DataFrame([[datetime.datetime.now(), sell_price]],columns=["Datetime Sell","Sell"])
+        self.previous_holdings =  self.previous_holdings.append(pd.concat([order,sell_df],axis=1))
+        print(self.previous_holdings)
+        self.current_holdings = self.current_holdings[self.current_holdings["Order id"] != orderId]   
+        return "Success"
 
 
 
-    def get_stock_id(self,stock_name):
-        return self.avanza.search_for_stock(stock_name).get('hits')[0].get('topHits')[0].get('id')
+    def __get_stock_id(self):
+        return self.avanza.search_for_stock(const.STOCK).get('hits')[0].get('topHits')[0].get('id')
 
 
 
-    def get_latest_stock_price(self,stock_name):
-        return self.avanza.get_stock_info(self.get_stock_id(stock_name)).get('lastPrice')
+    def get_latest_stock_price(self):
+        return self.avanza.get_stock_info(self.__get_stock_id()).get('lastPrice')
 
 
 

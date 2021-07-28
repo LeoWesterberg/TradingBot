@@ -22,7 +22,6 @@ class Test:
     def backTest(self):
         for i in range(self.db.get_previous_row()[const.INDEX].tolist()[0]-100,1,-1): #-100 for propagating towards more accurate values
             self.algo.strategy(self.db.get_nth_row(i)[const.DATETIME].tolist()[0])
-
         past_orders = self.algo.past_orders
         
 
