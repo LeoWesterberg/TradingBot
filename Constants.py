@@ -8,7 +8,7 @@ class Constants:
     RSI_LOWER_BOUND =       40
     RSI_PERIOD =            12
     LONG_EMA =              26
-    SHORT_EMA =             5
+    SHORT_EMA =             12
     RSI_SMOOTH_EMA_PERIOD = 3
     TICKER_INTERVAL =       5
     TICKER_PERIOD =         7 

@@ -3,6 +3,7 @@ from pandas.core.series import Series
 from plotly.missing_ipywidgets import FigureWidget 
 from DbManagement import DbManagement as bm
 import plotly.graph_objects as go
+import matplotlib
 from Algorithms import Algorithms
 from NewAlgorithms import NewAlgorithms
 from Constants import Constants as const
@@ -47,11 +48,11 @@ class Test:
 
         self.__addTrace(fig,"Ema 200",dates,"200 Ema")
 
-       # peaks = self.algo.all_pullback_indicies()
+        peaks = self.algo.all_pullback_indicies()
 
-        #closingPeaks = self.db.get_table()['Close'][peaks].tolist()
-        #datePeaks = self.db.get_table()['Datetime'][peaks].tolist()
-        #self.__addScatterPlot(fig,closingPeaks,datePeaks)
+        closingPeaks = self.db.get_table()['Close'][peaks].tolist()
+        datePeaks = self.db.get_table()['Datetime'][peaks].tolist()
+        self.__addScatterPlot(fig,closingPeaks,datePeaks, "Peaks")
         
         self.__addScatterPlot(fig,self.algo.macd_closings,self.algo.macd_dates,"MACD signals")
 

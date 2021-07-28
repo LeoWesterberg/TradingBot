@@ -22,11 +22,14 @@ class main:
         test:Test = Test(db,newAlgorithms)
 
         ##########################
-
-        init.reset_bot() 
-        #order_manag = OrderManagement()
-        print(db.get_nbr_of_rows())
+        #init.reset_bot()
+        init.update_bot()
+        test = Test(db,newAlgorithms)
         test.backTest()
+        #order_manag = OrderManagement()
+        #order_manag.buy_order('ERIC',1)
+        #print(db.get_nbr_of_rows())
+    
         
 
      

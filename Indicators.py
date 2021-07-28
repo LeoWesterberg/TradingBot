@@ -11,8 +11,8 @@ class Indicators:
 
 
 
-    def update_ema(self,data:DataFrame, window_size:int, initial_ema:float) -> DataFrame:
-        return self.__emaTemplate(data, initial_ema, window_size, 1)
+    def update_ema(self,data:DataFrame, window_size:int, initial_ema:float, attribute:str = "Close") -> DataFrame:
+        return self.__emaTemplate(data, initial_ema, window_size, 1,attribute)
     
 
 

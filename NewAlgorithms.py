@@ -14,10 +14,11 @@ class NewAlgorithms:
     past_orders = []
     macd_closings = []
     macd_dates = []
-
+    
 
     def __init__(self, db:DbManagement):
         self.db = db 
+        order_management:OrderManagement = OrderManagement()
 
 
     def retrieveValue(self, df:DataFrame, attr:str):
@@ -78,7 +79,7 @@ class NewAlgorithms:
     def all_pullback_indicies(self):
         data = self.db.get_table()
         smooth_closings = data[const.EMA_Short_INDEX].values
-        return find_peaks(-smooth_closings,distance=10,prominence=self.retrieveValue(self.db.get_previous_row(),const.CLOSE_INDEX) * 0.001)[0]
+        return find_peaks(-smooth_closings,distance=5,prominence=self.retrieveValue(self.db.get_previous_row(),const.CLOSE_INDEX) * 0.001)[0]
     
     def recent_pullback_value(self,dt,search_range):
         data = self.db.get_row_at_date(dt)
@@ -87,66 +88,70 @@ class NewAlgorithms:
             data = data.append(self.db.get_row_at_date(dt))
 
         data = data.iloc[::-1]  
-        smooth_closings = data[const.EMA_Short_INDEX].values
+        smooth_closings = data[const.CLOSE_INDEX].values
         nearby_peaks = find_peaks(-smooth_closings,distance=10,prominence=self.retrieveValue(self.db.get_row_at_date(dt),const.CLOSE_INDEX) * 0.001)[0]
         
-        return -1 if  len(nearby_peaks) == 0 else ([data[const.CLOSE_INDEX].to_list()[i] for i in nearby_peaks][-1])
+        return -1 if len(nearby_peaks) == 0 else ([data[const.CLOSE_INDEX].to_list()[i] for i in nearby_peaks][-1])
 
         
-        
-
-
-
-
-
 
 ##############################################################################################################################
-    def strategy(self, dt):
-
-        current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX)
-        
-    
+    def buy_signal(self,dt):
         gen_trend_condition = self.attr1_over_attr2(const.EMA_Short_INDEX,const.EMA_200_INDEX,dt)
         macd_condition = self.macd_crossover(dt) and self.macd_under_zero_line(dt)
-        #local_trend_condition = self.attr_secant(dt,const.CLOSE_INDEX,2)  < 0
-        if(macd_condition):
-            self.macd_closings.append(current_close)
-            self.macd_dates.append(dt -datetime.timedelta(hours=2))
-        if(gen_trend_condition and macd_condition and len(self.current_orders) == 0):# and local_trend_condition):
-                
-            stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss
+        #if(macd_condition):
+        #    self.macd_closings.append(current_close)
+        #    self.macd_dates.append(dt -datetime.timedelta(hours=2))
+        return gen_trend_condition and macd_condition and len(self.current_orders) == 0 # and local_trend_condition):
+
+
+
+    def sell_signal(self,dt,stop_loss,take_profit):
+        current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX)
+        return current_close >= take_profit or current_close <= stop_loss #or dt.hour == 21 and dt.minute == 60-const.TICKER_INTERVAL
+
+
+
+    def __initialize_sell_order(self, order:Order, dt:datetime, current_close:float) -> None:
+        earning = current_close - order.buy_closing
+        order.sell_date = dt-datetime.timedelta(hours=2)
+        order.sell_closing = current_close
+        order.active = False
+        self.profit += earning
+        self.current_orders.remove(order)
+        self.past_orders.append(order)
+        if(current_close >= order.profit_take):
+            print("SELLING at %s with %s profit (CLOSING: %s, DUE: PROFIT_TAKE)"%(dt,earning,current_close))
+
+        elif(current_close < order.stop_loss):
+            print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS)"%(dt,earning, current_close))
+
+        print("######################################################################")
+    
+
+
+    def __initialize_buy_order(self, dt, current_close:float) -> None:
+        stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
+        risk = current_close - stop_loss
+        take_profit = current_close + risk * const.RR_RATIO
+        stop_loss_mid = current_close + risk
+        order = Order(dt-datetime.timedelta(hours=2),current_close,stop_loss,take_profit,stop_loss_mid)
+        self.current_orders.append(order)
+        return order
+
+
+    def strategy(self, dt):
+        current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX)
+
+        if(self.buy_signal(dt)):
+            order = self.__initialize_buy_order(dt,current_close)
+            print("BUYING at %s (%s,%s)"%(dt,order.stop_loss,order.profit_take))
             
-            risk = current_close - stop_loss
-            take_profit = current_close + risk * const.RR_RATIO
-            stop_loss_mid = current_close + risk
-
-            order = Order(dt-datetime.timedelta(hours=2),current_close,stop_loss,take_profit,stop_loss_mid)
-            self.current_orders.append(order)
-
-            print("BUYING at %s (%s,%s)"%(self.db.get_row_at_date(dt)[const.DATETIME].tolist()[0],order.stop_loss,order.profit_take))
             
-            
-
-
         for i in self.current_orders: 
+            if(self.sell_signal(dt,i.stop_loss,i.profit_take)):
+                self.__initialize_sell_order(i,dt,current_close)
 
-            if(current_close >= i.profit_take or self.retrieve_value_dt(dt,const.OPEN_INDEX) <= i.stop_loss): #or dt.hour == 21 and dt.minute == 60-const.TICKER_INTERVAL
-                earning = current_close - i.buy_closing
-                i.sell_date = dt-datetime.timedelta(hours=2)
-                i.sell_closing = current_close
-                i.active = False
-                self.profit += earning
-                self.current_orders.remove(i)
-
-                ############## ONLY FOR TEST ################
-                self.past_orders.append(i)
-                #############################################
-
-                if(current_close >= i.profit_take):
-                    print("SELLING at %s with %s profit (CLOSING: %s, DUE: PROFIT_TAKE)"%(self.db.get_row_at_date(dt)[const.DATETIME].tolist()[0],earning,current_close))
-                elif(current_close < i.stop_loss):
-                    print("SELLING at %s with %s profit (CLOSING: %s, DUE: STOP_LOSS)"%(self.db.get_row_at_date(dt)[const.DATETIME].tolist()[0],earning, current_close))
-                print("######################################################################")
 
             
 

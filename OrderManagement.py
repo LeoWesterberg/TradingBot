@@ -21,7 +21,6 @@ class Order:
 
 
 
-
 class OrderManagement:
     def __init__(self):
         self.totp = pyotp.TOTP(Auth.AVANZA_TOTP_SECRET, digest=hashlib.sha1)
@@ -47,16 +46,16 @@ class OrderManagement:
     def buy_order(self,stock_name,volume):
         result = self.__place_order(OrderType.BUY, stock_name, volume)
 
-        if(result.get('status') == 'ERROR'):
-            self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
+        #if(result.get('status') == 'ERROR'):
+        #    self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
 
 
 
     def sell_order(self,stock_name,volume):
         result = self.__place_order(OrderType.SELL, stock_name, volume)
 
-        if(result.get('status') == 'ERROR'):
-            self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
+       # if(result.get('status') == 'ERROR'):
+       #     self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
 
 
 

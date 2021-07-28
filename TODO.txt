@@ -1,0 +1,3 @@
+* ändra så att man kan scanna av flera aktier samtidigt
+* inkludera köp och sälj i avanza i algorithmen
+* Audit log
