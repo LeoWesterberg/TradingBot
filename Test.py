@@ -3,8 +3,6 @@ from pandas.core.series import Series
 from plotly.missing_ipywidgets import FigureWidget 
 from DbManagement import DbManagement as bm
 import plotly.graph_objects as go
-import matplotlib
-from Algorithms import Algorithms
 from NewAlgorithms import NewAlgorithms
 from Constants import Constants as const
 

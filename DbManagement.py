@@ -1,15 +1,15 @@
-import datetime
+from Constants import Constants as const
+from Credentials import Credentials as Auth
 from pandas.core.frame import DataFrame
 from sqlalchemy import create_engine
-from Constants import Constants as const
 from psycopg2 import sql
-from Credentials import Credentials as Auth
 import pandas as pd
 import psycopg2
+import datetime
 
 
 class DbManagement:
-    CONNECTION_PATH = '***REMOVED***'
+    CONNECTION_PATH = Auth.DB_CONN_PATH
 
     def __init__(self):
         self.psy_copg_connection = psycopg2.connect(database="brain", user='postgres', password= Auth.DB_PASS)

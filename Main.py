@@ -25,7 +25,7 @@ class main:
         #init.reset_bot()
         #init.update_bot()
         test = Test(db,newAlgorithms)
-        init.reset_bot()
+        init.update_bot()
         test.backTest()
 
        # order_manag = OrderManagement()

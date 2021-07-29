@@ -5,7 +5,6 @@ import pandas as pd
 class Indicators:
     
     def ema_init(self, data:DataFrame, window_size:int, attribute:str = "Close") -> DataFrame:
-            #sum(data[attribute].to_numpy()[0:window_size])/window_size
             initial_value = data[attribute][0:window_size].ewm(span=window_size, adjust=False).mean().tolist()[0]
             return self.__emaTemplate(data, initial_value, window_size, 0, attribute)
 

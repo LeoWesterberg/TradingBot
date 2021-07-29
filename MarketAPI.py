@@ -20,9 +20,8 @@ class MarketAPI:
         data = data[(now - data["Datetime"]).dt.total_seconds()/60 > 5]       
         return data
 
-    def get_data_since(self, start:datetime) -> DataFrame:
-        print(start)
-        data = yf.download(tickers = self.stock, start = start, interval = self.interval)
+    def get_data_since(self, start:datetime, stock:str) -> DataFrame:
+        data = yf.download(tickers = stock, start = start, interval = self.interval)
         data = self.__apply_settings(data).rename(columns = {'Date': 'Datetime'})
         now = datetime.datetime.now().astimezone(pytz.timezone('Europe/Oslo'))
         data = data[(now - data["Datetime"]).dt.total_seconds()/60 > 5]       
