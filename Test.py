@@ -5,16 +5,16 @@ from pandas.core.series import Series
 from plotly.missing_ipywidgets import FigureWidget 
 from DbManagement import DbManagement as bm
 import plotly.graph_objects as go
-from NewAlgorithms import NewAlgorithms
+from Algorithms import Algorithms
 from Constants import Constants as const
 
 
 
 class Test:
 
-    def __init__(self,db:bm,algo:NewAlgorithms):
+    def __init__(self,db:bm,algorithms:Algorithms):
         self.db = db
-        self.algo = algo
+        self.algorithms = algorithms
     
 
 
@@ -27,13 +27,13 @@ class Test:
             for ticker in const.TICKERS:
                 date_row = self.db.get_row_at_date(date,ticker)
                 if(date_row.size != 0):
-                    self.algo.buy_strategy(date,"%s"%ticker)
-            self.algo.sell_strategy(date)
-        #past_orders = self.algo.past_orders
+                    self.algorithms.buy_strategy(date,"%s"%ticker)
+            self.algorithms.sell_strategy(date)
+        #past_orders = self.algorithms.past_orders
         
 
 
-        #print(self.algo.profit)
+        #print(self.algorithms.profit)
 
        # self.showPlot(past_orders)
 
@@ -54,13 +54,13 @@ class Test:
 
         self.__addTrace(fig,"Ema 200",dates,"200 Ema")
 
-        peaks = self.algo.all_pullback_indicies()
+        peaks = self.algorithms.all_pullback_indicies()
 
         closingPeaks = self.db.get_table()['Close'][peaks].tolist()
         datePeaks = self.db.get_table()['Datetime'][peaks].tolist()
         self.__addScatterPlot(fig,closingPeaks,datePeaks, "Peaks")
         
-        self.__addScatterPlot(fig,self.algo.macd_closings,self.algo.macd_dates,"MACD signals")
+        self.__addScatterPlot(fig,self.algorithms.macd_closings,self.algorithms.macd_dates,"MACD signals")
 
 
         self.__addScatterPlot(fig,buy_closing,buy_dates, "Buy signals")

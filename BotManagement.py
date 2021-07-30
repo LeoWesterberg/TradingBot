@@ -1,10 +1,12 @@
+from OldAlgorithms import Algorithms
 from numpy import NaN
 import time
+import pandas as pd
+
 from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
 from Indicators import Indicators
 from MarketAPI import MarketAPI
-import pandas as pd
 from Constants import Constants as const
 
 class BotManagement:
@@ -13,19 +15,20 @@ class BotManagement:
         self.market_api = MarketAPI()
         self.db = db 
         self.indicator = Indicators()
+        self.algorithms = Algorithms(db)
     
     def run_bot(self) -> None:
         while(True):
             self.update_bot()
-            date = self.db.get_previous_row(const.TICKERS[0]).get(0,const.DATETIME)
+            date = self.db.get_previous_row(const.TICKERS[0])[const.DATETIME].tolist()[0]
             for ticker in const.TICKERS:
                 date_row = self.db.get_row_at_date(date,ticker)
                 if(date_row.size != 0):
-                    self.newAlgorithms.buy_strategy(date,"%s"%ticker)
-            self.newAlgorithms.sell_strategy(date)
+                    self.algorithms.buy_strategy(date,"%s"%ticker)
+            self.algorithms.sell_strategy(date)
             time.sleep(const.TICKER_INTERVAL * 60)
 
-    def reset_bot(self) -> None:
+    def reset_bot(self):
         for ticker in const.TICKERS:
             data = self.market_api.get_data(ticker)
             indicator_data_frame = pd.concat([data,self.indicator.rsi_init(data, const.RSI_PERIOD),
@@ -36,8 +39,7 @@ class BotManagement:
                                                 self.indicator.macd_init(data, 26, 12, 9),
                                                 self.indicator.smooth_rsi_init(data, const.RSI_PERIOD, const.RSI_SMOOTH_EMA_PERIOD)], axis=1)
             self.db.reset(indicator_data_frame, "%s"%ticker)
-
-
+        return self
 
     def update_bot(self) -> None:
         for ticker in const.TICKERS:
@@ -46,6 +48,9 @@ class BotManagement:
             prev_indicators:list = list(map(lambda x:self.__get_value(x, ticker),const.ACTIVE_INDICATORS))
             
             data:DataFrame = self.market_api.get_data_since(request_date, ticker).iloc[1: , :]
+            if(data.size == 0):
+                continue
+
             result:DataFrame = DataFrame()
 
             def __new_ema(attribute:str, data=data):
