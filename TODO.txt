@@ -1,3 +1,10 @@
-* ändra så att man kan scanna av flera aktier samtidigt
-* inkludera köp och sälj i avanza i algorithmen
-* Audit log
+* Create audit logging
+
+* Create simple GUI
+ - see audit log
+ - run and pause program
+ - change active stocks
+
+* Fix locked order if stock has no update
+
+

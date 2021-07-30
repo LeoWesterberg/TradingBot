@@ -31,11 +31,11 @@ class Algorithms:
 
             if(self.__rsiOverMarginAD(dt) and self.__indiciesFromCrossOverAD(dt) <= 1 and not self.__isInstanceAfterNewDate(dt)):
                 self.CURRENT_POSITION = const.POSITION_HOLD
-                self.CURRENT_BUY = self.db.getRowAD(dt)["Close"].tolist()[0]
+                self.CURRENT_BUY = self.db.getRowAD(dt).at[0,"Close"]
 
                 self.buyDates.append(dt -datetime.timedelta(hours=2))
                 self.buyClosings.append(self.CURRENT_BUY)
-                print("BUYING at %s"%self.db.getRowAD(dt)[const.DATETIME].tolist()[0])
+                print("BUYING at %s"%self.db.getRowAD(dt).at[0,const.DATETIME])
 
         elif(self.CURRENT_POSITION == const.POSITION_HOLD):
             
@@ -44,12 +44,12 @@ class Algorithms:
 
             crossLess = self.__rsi5UnderMarginAD(dt) and self.__indiciesFromCrossOverAD(dt) <= 1
             attriDeriv:bool =  self.__attributeDerivativeAD(const.EMA_Long_INDEX,dt) < 0
-            buyBelowClose = self.CURRENT_BUY < self.db.getRowAD(dt)["Close"].tolist()[0]
+            buyBelowClose = self.CURRENT_BUY < self.db.getRowAD(dt).at[0,"Close"]
 
             if(crossLess or attriDeriv < 0 and buyBelowClose):
                 
                 self.CURRENT_POSITION = const.POSITION_NONE
-                closing = self.db.getRowAD(dt)["Close"].tolist()[0]
+                closing = self.db.getRowAD(dt).at[0,"Close"]
                 earning = closing - self.CURRENT_BUY
                 self.crossDate = -1
                 self.profit.append(earning)
@@ -58,7 +58,7 @@ class Algorithms:
                 if(earning > 0): self.nbrWin += 1 
                 else: self.nbrLoss +=1
                 
-                print("SELLING at %s with %s profit"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning))
+                print("SELLING at %s with %s profit"%(self.db.getRowAD(dt).at[0,const.DATETIME],earning))
                 print("######################################################################")
     
 
@@ -77,7 +77,7 @@ class Algorithms:
                 self.CURRENT_BUY = closing
                 self.buyClosings.append(self.CURRENT_BUY)
                 self.buyDates.append(dt-datetime.timedelta(hours=2))
-                print("BUYING at %s"%self.db.getRowAD(dt)[const.DATETIME].tolist()[0])
+                print("BUYING at %s"%self.db.getRowAD(dt).at[0,const.DATETIME])
                 
         elif(self.CURRENT_POSITION == const.POSITION_HOLD):
             condition= self.MACDlineZeroCrossUp(dt) #macd line crossing of zero line from down up
@@ -92,7 +92,7 @@ class Algorithms:
                 if(earning > 0): self.nbrWin += 1 
                 else: self.nbrLoss +=1
                 
-                print("SELLING at %s with %s profit"%(self.db.getRowAD(dt)[const.DATETIME].tolist()[0],earning))
+                print("SELLING at %s with %s profit"%(self.db.getRowAD(dt).at[0,const.DATETIME],earning))
                 print("######################################################################")
     
 
@@ -161,8 +161,8 @@ class Algorithms:
 
 
     def __isInstanceAfterNewDate(self,dt:datetime):
-        indexBefore = self.db.getRowAD(dt)[const.INDEX].tolist()[0] - 1
-        prevDatetime = self.db.getRowAtIndex(indexBefore)[const.DATETIME].tolist()[0]
+        indexBefore = self.db.getRowAD(dt).at[0,const.INDEX] - 1
+        prevDatetime = self.db.getRowAtIndex(indexBefore).at[0,const.DATETIME]
         if(abs(prevDatetime.hour - dt.hour > 1)):
             return True
         else:
@@ -171,7 +171,7 @@ class Algorithms:
 
 
     def __rsi5MarginTempAD(self,margin:int,rev:int,dt:datetime):
-        currInstance = self.db.getRowAD(dt)[const.RSI_INDEX].tolist()[0]
+        currInstance = self.db.getRowAD(dt).at[0,const.RSI_INDEX]
         if(rev*currInstance <= rev*self.RSI_MARGIN[margin]):
             return True
         else: return False

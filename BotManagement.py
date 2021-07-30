@@ -1,9 +1,10 @@
+import datetime
 from OldAlgorithms import Algorithms
 from numpy import NaN
 import time
 import pandas as pd
-
 from pandas.core.frame import DataFrame
+
 from DbManagement import DbManagement
 from Indicators import Indicators
 from MarketAPI import MarketAPI
@@ -11,21 +12,29 @@ from Constants import Constants as const
 
 class BotManagement:
 
-    def __init__(self, db:DbManagement):
+    def __init__(self, db:DbManagement, algorithms:Algorithms):
         self.market_api = MarketAPI()
-        self.db = db 
         self.indicator = Indicators()
-        self.algorithms = Algorithms(db)
+        self.db = db 
+        self.algorithms = algorithms
     
+
+
     def run_bot(self) -> None:
+        last_update:datetime = None
         while(True):
             self.update_bot()
-            date = self.db.get_previous_row(const.TICKERS[0])[const.DATETIME].tolist()[0]
-            for ticker in const.TICKERS:
-                date_row = self.db.get_row_at_date(date,ticker)
-                if(date_row.size != 0):
-                    self.algorithms.buy_strategy(date,"%s"%ticker)
-            self.algorithms.sell_strategy(date)
+            date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
+            if(date != last_update):
+                last_update = date
+
+                for ticker in const.TICKERS:
+                    date_row = self.db.get_row_at_date(date,ticker)
+
+                    if(date_row.size != 0):
+                        self.algorithms.buy_strategy(date,"%s"%ticker)
+
+                self.algorithms.sell_strategy(date)
             time.sleep(const.TICKER_INTERVAL * 60)
 
 
@@ -40,7 +49,7 @@ class BotManagement:
                                                 self.indicator.ema_init(data, 200),
                                                 self.indicator.macd_init(data, 26, 12, 9),
                                                 self.indicator.smooth_rsi_init(data, const.RSI_PERIOD, const.RSI_SMOOTH_EMA_PERIOD)], axis=1)
-            self.db.reset(indicator_data_frame, "%s"%ticker)
+            self.db.reset(indicator_data_frame, ticker)
         return self
 
 
@@ -57,17 +66,20 @@ class BotManagement:
 
             result:DataFrame = DataFrame()
 
+
             def __new_ema(attribute:str, data=data):
                 window_size = int(attribute.split(" ")[1])
-                return self.indicator.update_ema(data,window_size,prev_indicators[self.get_indicator_index(attribute)])
+                return self.indicator.update_ema(data,window_size,prev_indicators[self.__get_indicator_index(attribute)])
             
+
             def __new_ema_rsi(ema_window):
                 rsi = __new_rsi()
                 column_name = "Ema %s(Rsi %s)"%(ema_window, const.RSI_PERIOD)
-                prev_ema_rsi = prev_indicators[self.get_indicator_index(const.RSI_SMOOTH_INDEX)]
+                prev_ema_rsi = prev_indicators[self.__get_indicator_index(const.RSI_SMOOTH_INDEX)]
                 smooth_rsi_res = self.indicator.update_ema(rsi, ema_window, prev_ema_rsi, const.RSI_INDEX)
                 smooth_rsi_res = smooth_rsi_res.rename(columns={"Ema %s"%ema_window:column_name})
                 return smooth_rsi_res
+
 
             def __new_rsi():
                 dataSet = self.db.get_last_nth_rows(150, ticker).iloc[::-1].drop(columns=['index'] + const.ACTIVE_INDICATORS).append(data)
@@ -88,7 +100,6 @@ class BotManagement:
                     else:
                         result = pd.concat([result,__new_ema(indicator)],axis=1)
                         
-
                 elif(indicator_type == "Rsi"):
                     result = pd.concat([result,__new_rsi()],axis=1)
                 
@@ -99,7 +110,7 @@ class BotManagement:
                     result = pd.concat([result,macd_line],axis=1)
                     
                 elif(indicator == "Signal"): #Must calculate MACD line first
-                    prev_signal = prev_indicators[self.get_indicator_index(const.SIGNAL_INDEX)]
+                    prev_signal = prev_indicators[self.__get_indicator_index(const.SIGNAL_INDEX)]
                     signal = self.indicator.update_ema(result,9,prev_signal,const.MACD_INDEX)
                     signal = signal.rename(columns={"Ema 9":const.SIGNAL_INDEX})
                     result = pd.concat([result,signal],axis=1)
@@ -111,7 +122,6 @@ class BotManagement:
                     result = pd.concat([result,macd_histo],axis=1)
 
                     
-                
             data.reset_index(inplace=True)
             last_index = self.__get_value(const.INDEX,ticker)
             res = pd.concat([data.drop(columns='index'),result],axis=1)
@@ -120,10 +130,10 @@ class BotManagement:
 
 
 
-    def __get_value(self,attr:str,table_name) -> DataFrame:
-        return self.db.get_previous_row(table_name)[attr].to_list()[0]
+    def __get_value(self,attr:str,ticker) -> DataFrame:
+        return self.db.get_previous_row(ticker).at[0, attr]
 
-    def get_indicator_index(self, attribute:str):
+    def __get_indicator_index(self, attribute:str) -> int:
         return const.ACTIVE_INDICATORS.index(attribute)
 
 

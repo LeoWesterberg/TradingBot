@@ -3,8 +3,9 @@ from pandas.core.frame import DataFrame
 from pandas.core.indexes.datetimes import date_range
 from pandas.core.series import Series
 from plotly.missing_ipywidgets import FigureWidget 
-from DbManagement import DbManagement as bm
 import plotly.graph_objects as go
+
+from DbManagement import DbManagement
 from Algorithms import Algorithms
 from Constants import Constants as const
 
@@ -12,7 +13,7 @@ from Constants import Constants as const
 
 class Test:
 
-    def __init__(self,db:bm,algorithms:Algorithms):
+    def __init__(self,db:DbManagement, algorithms:Algorithms):
         self.db = db
         self.algorithms = algorithms
     
@@ -20,6 +21,7 @@ class Test:
 
     def backTest(self):
         start_date = self.db.get_row_at_index(100,const.TICKERS[0])[const.DATETIME].tolist()[0]
+        print("Beginning at: %s"%start_date)
         end_date = self.db.get_previous_row(const.TICKERS[0])[const.DATETIME].tolist()[0]
         date_times = date_range(start=start_date, end=end_date,freq='%smin'%const.TICKER_INTERVAL)
         
@@ -27,7 +29,7 @@ class Test:
             for ticker in const.TICKERS:
                 date_row = self.db.get_row_at_date(date,ticker)
                 if(date_row.size != 0):
-                    self.algorithms.buy_strategy(date,"%s"%ticker)
+                    self.algorithms.buy_strategy(date,ticker)
             self.algorithms.sell_strategy(date)
         #past_orders = self.algorithms.past_orders
         

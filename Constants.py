@@ -1,10 +1,6 @@
 class Constants:
 
-    #TODO: Make tickers from "TICKERS" available simultaneously
     TICKERS = ['AAPL', 'TSLA', 'GME']
-
-    #Current active ticker
-    STOCK = 'AAPL'
 
     #Different ticker settings
     RSI_UPPER_BOUND         = 60
