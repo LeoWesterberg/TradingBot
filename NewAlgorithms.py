@@ -16,7 +16,7 @@ class NewAlgorithms:
 
 
 
-    def retrieveValue(self, df:DataFrame, attr:str):
+    def retrieve_value(self, df:DataFrame, attr:str):
         return df[attr].to_list()[0]
 
 
@@ -70,7 +70,7 @@ class NewAlgorithms:
     def get_previous_date(self,dt, table_name):
         previousIndex = self.retrieve_value_dt(dt,const.INDEX, table_name)  - 1     
         
-        return self.retrieveValue(self.db.get_row_at_index(previousIndex),const.DATETIME)
+        return self.retrieve_value(self.db.get_row_at_index(previousIndex,table_name),const.DATETIME)
 
 
 
@@ -85,7 +85,7 @@ class NewAlgorithms:
     def all_pullback_indicies(self, table_name):
         data = self.db.get_table(table_name)
         smooth_closings = data[const.EMA_Short_INDEX].values
-        last_closing = self.retrieveValue(self.db.get_previous_row(table_name),const.CLOSE_INDEX)
+        last_closing = self.retrieve_value(self.db.get_previous_row(table_name),const.CLOSE_INDEX)
         return find_peaks(-smooth_closings,distance=5,prominence= last_closing * 0.001)[0]
     
 
@@ -99,7 +99,7 @@ class NewAlgorithms:
 
         data = data.iloc[::-1]  
         smooth_closings = data[const.CLOSE_INDEX].values
-        dt_closing = self.retrieveValue(self.db.get_row_at_date(dt, table_name),const.CLOSE_INDEX)
+        dt_closing = self.retrieve_value(self.db.get_row_at_date(dt, table_name),const.CLOSE_INDEX)
         nearby_peaks = find_peaks(-smooth_closings,distance=10,prominence= dt_closing * 0.001)[0]
        
         return -1 if len(nearby_peaks) == 0 else ([data[const.CLOSE_INDEX].to_list()[i] for i in nearby_peaks][-1])
@@ -114,9 +114,7 @@ class NewAlgorithms:
 
 
 
-    def sell_signal(self,dt,stop_loss,take_profit, table_name):
-        current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX, table_name)
-        
+    def sell_signal(self,stop_loss,take_profit, current_close): 
         return current_close >= take_profit or current_close <= stop_loss #or dt.hour == 21 and dt.minute == 60-const.TICKER_INTERVAL
 
 
@@ -130,19 +128,33 @@ class NewAlgorithms:
         stop_loss = self.retrieve_value_dt(dt,const.EMA_200_INDEX, table_name) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
         risk = current_close - stop_loss
         take_profit = current_close + risk * const.RR_RATIO
-        self.order_management.buy_order(stop_loss, take_profit)
+        self.order_management.buy_order(stop_loss, take_profit,table_name)
 
 
 
-    def strategy(self, dt, table_name = "Data"):
+    def buy_strategy(self, dt, table_name = "Data"):
         current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX,table_name)
 
         if(self.buy_signal(dt, table_name)):
             self.__initialize_buy_order(dt,current_close, table_name)
+            print("%s: Buying at time %s"%(table_name,dt))
 
+
+
+    def sell_strategy(self,dt):
         for index, row in self.order_management.current_holdings.iterrows():
-            if(self.sell_signal(dt,row["Stop loss"],row["Profit take"], table_name)):
-                self.__initialize_sell_order(row["Order id"])
+            stock = row.get(0,"ticker")
+            if(self.db.get_row_at_date(dt, stock).size != 0):
+                current_close = self.retrieve_value_dt(dt,const.CLOSE_INDEX, stock)
+                if(self.sell_signal(row["Stop loss"],row["Profit take"], current_close)):
+                    self.__initialize_sell_order(row["Order id"])
+                    if(row["Profit take"] < current_close):
+                        print("%s: Selling at time %s with profit %s"%(stock,dt,current_close - row["Profit take"]))
+                    else:
+                        print("%s: Selling at time %s with loss %s"%(stock,dt,row["Stop loss"] - current_close))
+                        
+                    
+
                 
             
             

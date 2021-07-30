@@ -14,7 +14,7 @@ class OrderManagement:
     
 
     def __init__(self):
-        self.ORDER_COLUMNS =  ["Order id","Stock","Datetime Buy", "Buy", "Stop loss", "Profit take"]
+        self.ORDER_COLUMNS =  ["Ticker","Order id","Stock","Datetime Buy", "Buy", "Stop loss", "Profit take"]
         self.current_holdings = DataFrame(columns=self.ORDER_COLUMNS)
         self.previous_holdings = DataFrame(columns=self.ORDER_COLUMNS + ["Datetime Sell","Sell"])
 
@@ -38,7 +38,7 @@ class OrderManagement:
 
 
 
-    def buy_order(self,stop_loss,profit_take):
+    def buy_order(self,stop_loss,profit_take, ticker):
        # result = self.__place_order(OrderType.BUY, 1)
        # #if(result.get('status') == 'ERROR'):
         #    self.avanza.delete_order(Auth.AVANZA_ACCOUNT_ID,result.get('orderId'))
@@ -47,7 +47,7 @@ class OrderManagement:
             order_id:int = random.randint(3, 90) #result.get("orderId")
             buy_price = self.get_latest_stock_price()
             dt = datetime.datetime.now()
-            order = DataFrame([[order_id,const.STOCK,dt,buy_price,stop_loss,profit_take]],columns=self.ORDER_COLUMNS)
+            order = DataFrame([[ticker,order_id,const.STOCK,dt,buy_price,stop_loss,profit_take]],columns=self.ORDER_COLUMNS)
             self.current_holdings =  self.current_holdings.append(order)
             return "Success"
 
@@ -65,7 +65,6 @@ class OrderManagement:
         sell_price = self.get_latest_stock_price()
         sell_df = DataFrame([[datetime.datetime.now(), sell_price]],columns=["Datetime Sell","Sell"])
         self.previous_holdings =  self.previous_holdings.append(pd.concat([order,sell_df],axis=1))
-        print(self.previous_holdings)
         self.current_holdings = self.current_holdings[self.current_holdings["Order id"] != orderId]   
         return "Success"
 

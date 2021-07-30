@@ -1,4 +1,5 @@
 from numpy import NaN
+import time
 from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
 from Indicators import Indicators
@@ -6,14 +7,23 @@ from MarketAPI import MarketAPI
 import pandas as pd
 from Constants import Constants as const
 
-class InitializeBot:
+class BotManagement:
 
-    def __init__(self, db:DbManagement, indicator:Indicators, market_api:MarketAPI):
-        self.market_api = market_api
-        self.db = db
-        self.indicator = indicator
+    def __init__(self, db:DbManagement):
+        self.market_api = MarketAPI()
+        self.db = db 
+        self.indicator = Indicators()
     
-
+    def run_bot(self) -> None:
+        while(True):
+            self.update_bot()
+            date = self.db.get_previous_row(const.TICKERS[0]).get(0,const.DATETIME)
+            for ticker in const.TICKERS:
+                date_row = self.db.get_row_at_date(date,ticker)
+                if(date_row.size != 0):
+                    self.newAlgorithms.buy_strategy(date,"%s"%ticker)
+            self.newAlgorithms.sell_strategy(date)
+            time.sleep(const.TICKER_INTERVAL * 60)
 
     def reset_bot(self) -> None:
         for ticker in const.TICKERS:
@@ -32,8 +42,8 @@ class InitializeBot:
     def update_bot(self) -> None:
         for ticker in const.TICKERS:
             
-            request_date = self.__get_value(const.DATETIME)
-            prev_indicators:list = list(map(lambda x:self.__get_value(x),const.ACTIVE_INDICATORS))
+            request_date = self.__get_value(const.DATETIME,ticker)
+            prev_indicators:list = list(map(lambda x:self.__get_value(x, ticker),const.ACTIVE_INDICATORS))
             
             data:DataFrame = self.market_api.get_data_since(request_date, ticker).iloc[1: , :]
             result:DataFrame = DataFrame()
@@ -51,7 +61,7 @@ class InitializeBot:
                 return smooth_rsi_res
 
             def __new_rsi():
-                dataSet = self.db.get_last_nth_rows(150).iloc[::-1].drop(columns=['index'] + const.ACTIVE_INDICATORS).append(data)
+                dataSet = self.db.get_last_nth_rows(150, ticker).iloc[::-1].drop(columns=['index'] + const.ACTIVE_INDICATORS).append(data)
                 new_rsi = self.indicator.rsi_init(dataSet,const.RSI_PERIOD)[150:]
                 new_rsi.reset_index(inplace=True)
                 new_rsi = new_rsi.drop(columns='index')
@@ -94,15 +104,15 @@ class InitializeBot:
                     
                 
             data.reset_index(inplace=True)
-            last_index = self.__get_value(const.INDEX)
+            last_index = self.__get_value(const.INDEX,ticker)
             res = pd.concat([data.drop(columns='index'),result],axis=1)
             res.index = range(last_index+1,last_index+len(res)+1)
             self.db.append_row(res, "%s"%ticker)
 
 
 
-    def __get_value(self,attr:str) -> DataFrame:
-        return self.db.get_previous_row()[attr].to_list()[0]
+    def __get_value(self,attr:str,table_name) -> DataFrame:
+        return self.db.get_previous_row(table_name)[attr].to_list()[0]
 
     def get_indicator_index(self, attribute:str):
         return const.ACTIVE_INDICATORS.index(attribute)

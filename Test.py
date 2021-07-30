@@ -1,4 +1,6 @@
 import datetime
+from pandas.core.frame import DataFrame
+from pandas.core.indexes.datetimes import date_range
 from pandas.core.series import Series
 from plotly.missing_ipywidgets import FigureWidget 
 from DbManagement import DbManagement as bm
@@ -13,24 +15,31 @@ class Test:
     def __init__(self,db:bm,algo:NewAlgorithms):
         self.db = db
         self.algo = algo
-        self.data = db.get_table("Data")
     
 
 
     def backTest(self):
-        for i in range(self.db.get_previous_row()[const.INDEX].tolist()[0]-100,1,-1): #-100 for propagating towards more accurate values
-            self.algo.strategy(self.db.get_nth_row(i)[const.DATETIME].tolist()[0])
-        past_orders = self.algo.past_orders
+        start_date = self.db.get_row_at_index(100,const.TICKERS[0])[const.DATETIME].tolist()[0]
+        end_date = self.db.get_previous_row(const.TICKERS[0])[const.DATETIME].tolist()[0]
+        date_times = date_range(start=start_date, end=end_date,freq='%smin'%const.TICKER_INTERVAL)
+        
+        for date in date_times:
+            for ticker in const.TICKERS:
+                date_row = self.db.get_row_at_date(date,ticker)
+                if(date_row.size != 0):
+                    self.algo.buy_strategy(date,"%s"%ticker)
+            self.algo.sell_strategy(date)
+        #past_orders = self.algo.past_orders
         
 
 
-        print(self.algo.profit)
+        #print(self.algo.profit)
 
-        self.showPlot(past_orders)
+       # self.showPlot(past_orders)
 
 
 
-    def showPlot(self,past_orders):
+    def showPlot(self,past_orders, date:DataFrame):
         dates = self.data[const.DATETIME].apply(lambda x:self.__dateToString(x))
         fig = go.Figure(data=[go.Candlestick(x=dates,
                                 open=self.data[const.OPEN_INDEX],

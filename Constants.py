@@ -1,20 +1,22 @@
 class Constants:
 
     #TODO: Make tickers from "TICKERS" available simultaneously
-    TICKERS = ['AAPL', 'TSLA', 'GME', 'BTC-USD', 'ETH-USD']
+    TICKERS = ['AAPL', 'TSLA', 'GME']
 
+    #Current active ticker
     STOCK = 'AAPL'
 
+    #Different ticker settings
     RSI_UPPER_BOUND         = 60
     RSI_LOWER_BOUND         = 40
     RSI_PERIOD              = 12
     LONG_EMA                = 26
     SHORT_EMA               = 12
     RSI_SMOOTH_EMA_PERIOD   = 3
-    TICKER_INTERVAL         = 5
-    TICKER_PERIOD           = 7 
+    TICKER_INTERVAL         = 15 #minutes
+    TICKER_PERIOD           = 60 #days 
     RR_RATIO                = 1.5
-
+    
     INDEX             = "index"
     DATETIME          = "Datetime"
     OPEN_INDEX        = "Open"
