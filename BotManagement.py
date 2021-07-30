@@ -28,6 +28,8 @@ class BotManagement:
             self.algorithms.sell_strategy(date)
             time.sleep(const.TICKER_INTERVAL * 60)
 
+
+
     def reset_bot(self):
         for ticker in const.TICKERS:
             data = self.market_api.get_data(ticker)
@@ -40,6 +42,8 @@ class BotManagement:
                                                 self.indicator.smooth_rsi_init(data, const.RSI_PERIOD, const.RSI_SMOOTH_EMA_PERIOD)], axis=1)
             self.db.reset(indicator_data_frame, "%s"%ticker)
         return self
+
+
 
     def update_bot(self) -> None:
         for ticker in const.TICKERS:
