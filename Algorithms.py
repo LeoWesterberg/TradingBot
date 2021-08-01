@@ -12,7 +12,7 @@ class Algorithms:
     
     def __init__(self, db:DbManagement):
         self.db = db 
-        self.order_management:OrderManagement = OrderManagement()
+        self.order_management = OrderManagement()
 
 
     def __retrieve_value(self, df:DataFrame, attr:str):
@@ -68,7 +68,7 @@ class Algorithms:
 
     def __get_previous_date(self,dt, ticker):
         previousIndex = self.__retrieve_value_dt(dt,const.INDEX, ticker)  - 1     
-        
+
         return self.__retrieve_value(self.db.get_row_at_index(previousIndex,ticker),const.DATETIME)
 
 
@@ -106,16 +106,24 @@ class Algorithms:
 
 
 
-    def __initialize_sell_order(self, order_id) -> None:
-        self.order_management.sell_order(order_id)
+    def __initialize_sell_order(self, order_id, test_mode,dt) -> None:
+        if(not test_mode): 
+            self.order_management.sell_order(order_id)
+        else:
+            self.order_management.sell_order(order_id, dt)
+
         
 
 
-    def __initialize_buy_order(self, dt, current_close:float, ticker) -> None:
+    def __initialize_buy_order(self, dt, current_close:float, ticker, test_mode) -> None:
         stop_loss = self.__retrieve_value_dt(dt,const.EMA_200_INDEX, ticker) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
         risk = current_close - stop_loss
         take_profit = current_close + risk * const.RR_RATIO
-        self.order_management.buy_order(stop_loss, take_profit,ticker)
+        if(not test_mode): 
+            self.order_management.buy_order(stop_loss, take_profit,ticker)
+        else:
+            self.order_management.buy_order(stop_loss, take_profit,ticker, dt)
+
 
 
 
@@ -132,22 +140,25 @@ class Algorithms:
 
 
 
-    def buy_strategy(self, dt, ticker = "Data"):
+    def buy_strategy(self, dt, test_mode, ticker = "Data"):
         current_close = self.__retrieve_value_dt(dt,const.CLOSE_INDEX,ticker)
 
         if(self.__buy_signal(dt, ticker)):
-            self.__initialize_buy_order(dt,current_close, ticker)
+            self.__initialize_buy_order(dt,current_close, ticker, test_mode)
             print("%s: Buying at time %s"%(ticker,dt))
 
 
 
-    def sell_strategy(self,dt):
+    def sell_strategy(self,dt, test_mode):
         for index, row in self.order_management.current_holdings.iterrows():
             stock = row.get(0,"ticker")
+
             if(self.db.get_row_at_date(dt, stock).size != 0):
                 current_close = self.__retrieve_value_dt(dt,const.CLOSE_INDEX, stock)
+
                 if(self.__sell_signal(row["Stop loss"],row["Profit take"], current_close)):
-                    self.__initialize_sell_order(row["Order id"])
+                    self.__initialize_sell_order(row["Order id"],test_mode,dt)
+                    
                     if(row["Profit take"] < current_close):
                         print("%s: Selling at time %s with profit %s"%(stock,dt,current_close - row["Profit take"]))
                     else:

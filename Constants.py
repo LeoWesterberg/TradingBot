@@ -1,6 +1,6 @@
 class Constants:
 
-    TICKERS = ['AAPL', 'TSLA', 'GME']
+    TICKERS = ['AAPL','TSLA']
 
     #Different ticker settings
     RSI_UPPER_BOUND         = 60
@@ -9,8 +9,8 @@ class Constants:
     LONG_EMA                = 26
     SHORT_EMA               = 12
     RSI_SMOOTH_EMA_PERIOD   = 3
-    TICKER_INTERVAL         = 15 #minutes
-    TICKER_PERIOD           = 60 #days 
+    TICKER_INTERVAL         = 5 #minutes
+    TICKER_PERIOD           = 20 #days 
     RR_RATIO                = 1.5
     
     INDEX             = "index"

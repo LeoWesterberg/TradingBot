@@ -1,5 +1,5 @@
 import datetime
-from OldAlgorithms import Algorithms
+from Algorithms import Algorithms
 from numpy import NaN
 import time
 import pandas as pd
@@ -22,19 +22,28 @@ class BotManagement:
 
     def run_bot(self) -> None:
         last_update:datetime = None
+        pre_shutdown = False
+        
         while(True):
             self.update_bot()
             date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
+
             if(date != last_update):
                 last_update = date
+                pre_shutdown = False
 
                 for ticker in const.TICKERS:
                     date_row = self.db.get_row_at_date(date,ticker)
 
                     if(date_row.size != 0):
-                        self.algorithms.buy_strategy(date,"%s"%ticker)
+                        self.algorithms.buy_strategy(date,False,"%s"%ticker)
 
-                self.algorithms.sell_strategy(date)
+                self.algorithms.sell_strategy(date, False)
+
+            else:
+                if(pre_shutdown):
+                    break
+
             time.sleep(const.TICKER_INTERVAL * 60)
 
 
