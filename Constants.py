@@ -1,6 +1,6 @@
 class Constants:
 
-    TICKERS = ['AAPL','TSLA']
+    TICKERS = ['AAPL']
 
     #Different ticker settings
     RSI_UPPER_BOUND         = 60
@@ -39,8 +39,11 @@ class Constants:
 
     ACTIVE_INDICATORS = [RSI_INDEX, EMA_Long_INDEX, EMA_Short_INDEX, EMA_100_INDEX, EMA_200_INDEX,
                          MACD_INDEX, SIGNAL_INDEX, MACD_DIFF_INDEX, RSI_SMOOTH_INDEX]
-
     BASE_VALUES = [DATETIME, OPEN_INDEX, HIGH_INDEX, LOW_INDEX, CLOSE_INDEX, ADJ_CLOSE_INDEX, VOLUME_INDEX]
+    
+    ACTIVE_ORDER_COLUMNS =  ["Ticker","Order id","Stock","Datetime Buy", "Buy", "Stop loss", "Profit take"]
+    PREV_ORDER_COLUMNS =   ACTIVE_ORDER_COLUMNS + ["Datetime Sell","Sell"]
+
 
 
 

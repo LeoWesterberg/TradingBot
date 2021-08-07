@@ -1,10 +1,6 @@
 * Create audit logging
-
-* Create simple GUI
- - see audit log
- - run and pause program
- - change active stocks
-
+* Save holdings in database
 * Fix locked order if stock has no update
+* Add stoploss at pullback values
 
 

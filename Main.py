@@ -8,9 +8,11 @@ class main:
     def main():
         db = DbManagement()
         algorithms = Algorithms(db)
-        BotManagement(db, algorithms).reset_bot()
-        test = Test(db,algorithms)
-        test.backTest()
+        bot = BotManagement(db, algorithms)
+        bot.run_bot()
+
+        #test = Test(db,algorithms)
+        #test.backTest()
 
 
 

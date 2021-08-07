@@ -1,10 +1,7 @@
-import datetime
+import datetime, time,pandas as pd
 from Algorithms import Algorithms
-from numpy import NaN
-import time
-import pandas as pd
-from pandas.core.frame import DataFrame
 
+from pandas.core.frame import DataFrame
 from DbManagement import DbManagement
 from Indicators import Indicators
 from MarketAPI import MarketAPI
@@ -23,28 +20,36 @@ class BotManagement:
     def run_bot(self) -> None:
         last_update:datetime = None
         pre_shutdown = False
-        
-        while(True):
-            self.update_bot()
-            date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
+        try:
+            self.algorithms.order_management.active_holdings = self.db.get_table("ACTIVE HOLDINGS")
+            self.algorithms.order_management.previous_holdings = self.db.get_table("PREV HOLDINGS")
+           
+            while(True):
+                self.update_bot()
+                date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
 
-            if(date != last_update):
-                last_update = date
-                pre_shutdown = False
+                if(date != last_update):
+                    print("Updated at date: %s"%date)
+                    last_update = date
 
-                for ticker in const.TICKERS:
-                    date_row = self.db.get_row_at_date(date,ticker)
+                    for ticker in const.TICKERS:
+                        date_row = self.db.get_row_at_date(date,ticker)
 
-                    if(date_row.size != 0):
-                        self.algorithms.buy_strategy(date,False,"%s"%ticker)
+                        if(date_row.size != 0):
+                            self.algorithms.buy_strategy(date,False,ticker)
 
-                self.algorithms.sell_strategy(date, False)
+                    self.algorithms.sell_strategy(date, False)
 
-            else:
-                if(pre_shutdown):
-                    break
+                else:
+                    if(pre_shutdown):
+                        break
 
-            time.sleep(const.TICKER_INTERVAL * 60)
+                time.sleep(60)
+                print(".")
+                
+        except KeyboardInterrupt:
+            self.db.reset(self.algorithms.order_management.active_holdings, "ACTIVE HOLDINGS")
+            self.db.reset(self.algorithms.order_management.previous_holdings, "PREV HOLDINGS")
 
 
 
