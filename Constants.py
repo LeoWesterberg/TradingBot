@@ -12,36 +12,37 @@ class Constants:
     TICKER_INTERVAL         = 5 #minutes
     TICKER_PERIOD           = 20 #days 
     RR_RATIO                = 1.5
+    TICKER_MAX_HOLDINGS     = 2
     
     INDEX             = "index"
     DATETIME          = "Datetime"
-    OPEN_INDEX        = "Open"
-    HIGH_INDEX        = "High"
-    LOW_INDEX         = "Low"
-    CLOSE_INDEX       = "Close"
-    ADJ_CLOSE_INDEX   = "Adj Close"
-    VOLUME_INDEX      = "Volume"
+    OPEN        = "Open"
+    HIGH        = "High"
+    LOW         = "Low"
+    CLOSE       = "Close"
+    ADJ_CLOSE   = "Adj Close"
+    VOLUME      = "Volume"
 
-    MACD_INDEX          = "MACD"
-    SIGNAL_INDEX        = "Signal"
-    MACD_DIFF_INDEX     = "MACD Diff"
-    RSI_SMOOTH_INDEX    = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
-    RSI_INDEX           = "Rsi %s"%(RSI_PERIOD)
-    EMA_Short_INDEX     = "Ema %s"%(SHORT_EMA)
-    EMA_Long_INDEX      = "Ema %s"%(LONG_EMA)
-    EMA_RSI_INDEX       = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
-    EMA_200_INDEX       = "Ema 200"
-    EMA_100_INDEX       = "Ema 100"
+    MACD          = "MACD"
+    SIGNAL        = "Signal"
+    MACD_DIFF     = "MACD Diff"
+    RSI_SMOOTH    = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
+    RSI           = "Rsi %s"%(RSI_PERIOD)
+    EMA_Short     = "Ema %s"%(SHORT_EMA)
+    EMA_Long      = "Ema %s"%(LONG_EMA)
+    EMA_RSI       = "Ema %s(Rsi %s)"%(RSI_SMOOTH_EMA_PERIOD,RSI_PERIOD)
+    EMA_200       = "Ema 200"
+    EMA_100       = "Ema 100"
 
 
     POSITION_NONE       = "NONE"
     POSITION_HOLD       = "HOLD"
 
-    ACTIVE_INDICATORS = [RSI_INDEX, EMA_Long_INDEX, EMA_Short_INDEX, EMA_100_INDEX, EMA_200_INDEX,
-                         MACD_INDEX, SIGNAL_INDEX, MACD_DIFF_INDEX, RSI_SMOOTH_INDEX]
-    BASE_VALUES = [DATETIME, OPEN_INDEX, HIGH_INDEX, LOW_INDEX, CLOSE_INDEX, ADJ_CLOSE_INDEX, VOLUME_INDEX]
+    ACTIVE_INDICATORS = [RSI, EMA_Long, EMA_Short, EMA_100, EMA_200,
+                         MACD, SIGNAL, MACD_DIFF, RSI_SMOOTH]
+    BASE_VALUES = [DATETIME, OPEN, HIGH, LOW, CLOSE, ADJ_CLOSE, VOLUME]
     
-    ACTIVE_ORDER_COLUMNS =  ["Ticker","Order id","Stock","Datetime Buy", "Buy", "Stop loss", "Profit take"]
+    ACTIVE_ORDER_COLUMNS =  ["Ticker","Order id","Datetime Buy", "Buy", "Stop loss", "Profit take"]
     PREV_ORDER_COLUMNS =   ACTIVE_ORDER_COLUMNS + ["Datetime Sell","Sell"]
 
 

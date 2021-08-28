@@ -1,5 +1,3 @@
-* Create audit logging
-* Save holdings in database
 * Fix locked order if stock has no update
 * Add stoploss at pullback values
 

@@ -44,18 +44,18 @@ class Test:
             ticker_holdings = closings.loc[closings['Ticker'] == ticker]
 
             ticker_sell_dates = ticker_holdings["Datetime Sell"].tolist()
-            ticker_sell_prices = list(map(lambda x:self.db.get_row_at_date(x, ticker)[const.CLOSE_INDEX].tolist()[0],ticker_sell_dates))
+            ticker_sell_prices = list(map(lambda x:self.db.get_row_at_date(x, ticker)[const.CLOSE].tolist()[0],ticker_sell_dates))
             
             ticker_buy_dates = ticker_holdings["Datetime Buy"].tolist()
-            ticker_buy_prices = list(map(lambda x:self.db.get_row_at_date(x, ticker)[const.CLOSE_INDEX].tolist()[0],ticker_buy_dates))
+            ticker_buy_prices = list(map(lambda x:self.db.get_row_at_date(x, ticker)[const.CLOSE].tolist()[0],ticker_buy_dates))
 
             data = self.db.get_table(ticker)
             dates = data[const.DATETIME].apply(lambda x:self.__dateToString(x))
             fig = go.Figure(data=[go.Candlestick(x=dates,
-                                    open=data[const.OPEN_INDEX],
-                                    high=data[const.HIGH_INDEX],
-                                    low=data[const.LOW_INDEX],
-                                    close=data[const.CLOSE_INDEX])])
+                                    open=data[const.OPEN],
+                                    high=data[const.HIGH],
+                                    low=data[const.LOW],
+                                    close=data[const.CLOSE])])
 
             peaks = self.algorithms.all_pullback_indicies(ticker)
             closingPeaks = data['Close'][peaks].tolist()

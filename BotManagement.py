@@ -15,16 +15,28 @@ class BotManagement:
         self.db = db 
         self.algorithms = algorithms
     
+    def initialize_run_bot(self):
+        order_manag = self.algorithms.order_management
+        active_holdings =  order_manag.active_holdings
+        
+        active_holdings = self.db.get_table("ACTIVE HOLDINGS")
+        order_manag.previous_holdings = self.db.get_table("PREV HOLDINGS")
+        for index, row  in active_holdings.iterrows():
+            ticker = row.get(0,"Ticker")
+            if ticker in order_manag.active_tickers:
+                order_manag.active_tickers[ticker] += 1
+            else:
+                order_manag.active_tickers[ticker] = 1
+    
 
 
     def run_bot(self) -> None:
-        last_update:datetime = None
-        pre_shutdown = False
+        last_update:datetime = None        
         try:
-            self.algorithms.order_management.active_holdings = self.db.get_table("ACTIVE HOLDINGS")
-            self.algorithms.order_management.previous_holdings = self.db.get_table("PREV HOLDINGS")
-           
+            self.initialize_run_bot()
+
             while(True):
+                
                 self.update_bot()
                 date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
 
@@ -40,16 +52,12 @@ class BotManagement:
 
                     self.algorithms.sell_strategy(date, False)
 
-                else:
-                    if(pre_shutdown):
-                        break
-
                 time.sleep(60)
                 print(".")
                 
         except KeyboardInterrupt:
-            self.db.reset(self.algorithms.order_management.active_holdings, "ACTIVE HOLDINGS")
-            self.db.reset(self.algorithms.order_management.previous_holdings, "PREV HOLDINGS")
+            self.db.reset(self.algorithms.order_management.active_holdings.drop(columns='index'), "ACTIVE HOLDINGS")
+            self.db.reset(self.algorithms.order_management.previous_holdings.drop(columns='index'), "PREV HOLDINGS")
 
 
 
@@ -89,8 +97,8 @@ class BotManagement:
             def __new_ema_rsi(ema_window):
                 rsi = __new_rsi()
                 column_name = "Ema %s(Rsi %s)"%(ema_window, const.RSI_PERIOD)
-                prev_ema_rsi = prev_indicators[self.__get_indicator_index(const.RSI_SMOOTH_INDEX)]
-                smooth_rsi_res = self.indicator.update_ema(rsi, ema_window, prev_ema_rsi, const.RSI_INDEX)
+                prev_ema_rsi = prev_indicators[self.__get_indicator_index(const.RSI_SMOOTH)]
+                smooth_rsi_res = self.indicator.update_ema(rsi, ema_window, prev_ema_rsi, const.RSI)
                 smooth_rsi_res = smooth_rsi_res.rename(columns={"Ema %s"%ema_window:column_name})
                 return smooth_rsi_res
 
@@ -118,21 +126,21 @@ class BotManagement:
                     result = pd.concat([result,__new_rsi()],axis=1)
                 
                 elif(indicator == "MACD"): #Must calculate Ema indexes first
-                    curr_ema_long = result[const.EMA_Long_INDEX]
-                    curr_ema_short = result[const.EMA_Short_INDEX]
+                    curr_ema_long = result[const.EMA_Long]
+                    curr_ema_short = result[const.EMA_Short]
                     macd_line = DataFrame(curr_ema_short.subtract(curr_ema_long),columns=["MACD"])
                     result = pd.concat([result,macd_line],axis=1)
                     
                 elif(indicator == "Signal"): #Must calculate MACD line first
-                    prev_signal = prev_indicators[self.__get_indicator_index(const.SIGNAL_INDEX)]
-                    signal = self.indicator.update_ema(result,9,prev_signal,const.MACD_INDEX)
-                    signal = signal.rename(columns={"Ema 9":const.SIGNAL_INDEX})
+                    prev_signal = prev_indicators[self.__get_indicator_index(const.SIGNAL)]
+                    signal = self.indicator.update_ema(result,9,prev_signal,const.MACD)
+                    signal = signal.rename(columns={"Ema 9":const.SIGNAL})
                     result = pd.concat([result,signal],axis=1)
                 
                 elif(indicator == "MACD Diff"):
-                    curr_macd = result[const.MACD_INDEX]
-                    curr_signal = result[const.SIGNAL_INDEX]
-                    macd_histo = DataFrame(curr_macd.subtract(curr_signal),columns=[const.MACD_DIFF_INDEX])
+                    curr_macd = result[const.MACD]
+                    curr_signal = result[const.SIGNAL]
+                    macd_histo = DataFrame(curr_macd.subtract(curr_signal),columns=[const.MACD_DIFF])
                     result = pd.concat([result,macd_histo],axis=1)
 
                     
