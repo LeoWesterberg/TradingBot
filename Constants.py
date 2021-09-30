@@ -1,5 +1,5 @@
 class Constants:
-
+    
     TICKERS = ['AAPL']
 
     #Different ticker settings

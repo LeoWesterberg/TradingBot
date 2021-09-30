@@ -6,6 +6,7 @@ from DbManagement import DbManagement
 from Indicators import Indicators
 from MarketAPI import MarketAPI
 from Constants import Constants as const
+from Test import Test
 
 class BotManagement:
 
@@ -15,6 +16,7 @@ class BotManagement:
         self.db = db 
         self.algorithms = algorithms
     
+    #Extracts data from database and initialize bot
     def initialize_run_bot(self):
         order_manag = self.algorithms.order_management
         active_holdings =  order_manag.active_holdings
@@ -28,39 +30,55 @@ class BotManagement:
             else:
                 order_manag.active_tickers[ticker] = 1
     
-
-
+    #Core part of program, which calls initialization methods and request updates
+    # and state between a time interval
     def run_bot(self) -> None:
-        last_update:datetime = None        
-        try:
-            self.initialize_run_bot()
+        quit = False
+        while(quit != True):
+            print("Backtest[press 0] | Deploy[press 1] | Quit[press 2]")
+            choise = input()
+            while(choise not in ['0', '1', '2']):
+                print("Invalid option, try again!")
+                choise = int(input())
+           
+            if(choise == '0'):
+                test = Test(self.db, self.algorithms)
+                test.backTest()
 
-            while(True):
+            if(choise == '1'): 
+                self.run_deploy()
                 
-                self.update_bot()
-                date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
-
-                if(date != last_update):
-                    print("Updated at date: %s"%date)
-                    last_update = date
-
-                    for ticker in const.TICKERS:
-                        date_row = self.db.get_row_at_date(date,ticker)
-
-                        if(date_row.size != 0):
-                            self.algorithms.buy_strategy(date,False,ticker)
-
-                    self.algorithms.sell_strategy(date, False)
-
-                time.sleep(60)
-                print(".")
-                
-        except KeyboardInterrupt:
-            self.db.reset(self.algorithms.order_management.active_holdings.drop(columns='index'), "ACTIVE HOLDINGS")
-            self.db.reset(self.algorithms.order_management.previous_holdings.drop(columns='index'), "PREV HOLDINGS")
+            elif(choise == '2'):
+                exit()
 
 
 
+    def run_deploy(self):
+        while(True):
+                last_update:datetime = None        
+                try:
+                    self.initialize_run_bot()
+                    while(True):
+                        self.update_bot()                            
+                        date = self.db.get_previous_row(const.TICKERS[0]).at[0,const.DATETIME]
+                        if(date != last_update):
+                            print("Updated at date: %s"%date)
+                            last_update = date
+                            for ticker in const.TICKERS:
+                                date_row = self.db.get_row_at_date(date,ticker)
+                                if(date_row.size != 0):
+                                    self.algorithms.buy_strategy(date,False,ticker)
+                                    self.algorithms.sell_strategy(date, False)
+                        time.sleep(60)
+                        print(".")    
+                except KeyboardInterrupt:
+                    self.db.reset(self.algorithms.order_management.active_holdings.drop(columns='index'), "ACTIVE HOLDINGS")
+                    self.db.reset(self.algorithms.order_management.previous_holdings.drop(columns='index'), "PREV HOLDINGS")
+
+    
+
+
+    #Resets database and recalculates historical indicator values
     def reset_bot(self):
         for ticker in const.TICKERS:
             data = self.market_api.get_data(ticker)
@@ -75,7 +93,8 @@ class BotManagement:
         return self
 
 
-
+    #Update database with indicators from timeperiod of previous row in database
+    #until current time
     def update_bot(self) -> None:
         for ticker in const.TICKERS:
             

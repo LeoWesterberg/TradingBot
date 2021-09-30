@@ -13,17 +13,18 @@ class Algorithms:
         self.db = db 
         self.order_management = OrderManagement(db)
 
-
+    
+    #Retrieves the first value from a dataframe given its column name
     def __retrieve_value(self, df:DataFrame, attr:str):
         return df[attr].to_list()[0]
 
 
-
+    #Retrieves value from database given a certain date and attribute name
     def __retrieve_value_dt(self, dt, attr:str, ticker):
         return self.db.get_row_at_date(dt, ticker)[attr].to_list()[0]
 
 
-
+    #Calculates if one attribute is over another for a specific date and ticker
     def __attr1_over_attr2(self, attrOver, attrUnder, dt, ticker):    
         current_attr_over = self.__retrieve_value_dt(dt,attrOver, ticker)
         current_attr_under = self.__retrieve_value_dt(dt,attrUnder, ticker)
@@ -31,7 +32,7 @@ class Algorithms:
         return current_attr_over > current_attr_under
 
 
-
+    #Calculates if a macd crossover has occured for a specific date and ticker
     def __macd_crossover(self, dt, ticker):
         previous_date = self.__get_previous_date(dt, ticker)
         prev_macd_stat = self.__attr1_over_attr2(const.MACD,const.SIGNAL,previous_date, ticker)
@@ -40,7 +41,8 @@ class Algorithms:
         return current_macd_stat and not prev_macd_stat
 
 
-    
+    #Calculates if there has been a signal crossover for a specific date and ticker. Not
+    #used in the current algorithm, but stays for future use.
     def __signal_crossover(self, dt):
         previous_date = self.__get_previous_date(dt)
         prev_macd_stat = self.__attr1_over_attr2(const.SIGNAL,const.MACD,previous_date)
@@ -49,7 +51,8 @@ class Algorithms:
         return current_macd_stat and not prev_macd_stat
     
 
-
+    #Calculates the inclination of the secant, with specified window size for a 
+    # specific attribute, date and ticker
     def __attr_secant(self,dt,attr,window, ticker):
         prev_date = self.__get_previous_date(dt)
 
@@ -59,19 +62,20 @@ class Algorithms:
         return self.__retrieve_value_dt(dt,attr, ticker) - self.__retrieve_value_dt(prev_date,attr, ticker)
 
 
-
+    #Checks if the MACD line is under the Zero line
     def __macd_under_zero_line(self,dt, ticker):
         return self.__retrieve_value_dt(dt,const.MACD, ticker) < 0
 
 
-
+    #Returns the value from dataframe for the previous date given the a date.
     def __get_previous_date(self,dt, ticker):
         previousIndex = self.__retrieve_value_dt(dt,const.INDEX, ticker)  - 1     
 
         return self.__retrieve_value(self.db.get_row_at_index(previousIndex,ticker),const.DATETIME)
 
 
-
+    #Checks if shorter EMA value crosses the Longer EMA value. Is not used in the current active
+    #algorithm. For future development of algorithm
     def __short_long_ema_cross(self,dt:datetime, ticker): #check
         previous_date = self.__get_previous_date(dt, ticker)
         curr_ema_stat = self.__attr1_over_attr2(const.EMA_Short,const.EMA_Long,dt, ticker)
@@ -80,15 +84,16 @@ class Algorithms:
         return curr_ema_stat and not prev_ema_stat
 
 
-
+    #Calculates all the pullback indicies.  Is used in future development in the algorithm
+    #trying to set the stoploss at nearest pullback value
     def all_pullback_indicies(self, ticker):
         data = self.db.get_table(ticker)
         smooth_closings = data[const.CLOSE].values
         return find_peaks(-smooth_closings,distance=10,width=4)[0]
     
 
-
-    def __recent_pullback_value(self,dt,search_range, ticker):
+    #Returns pullback at a specific date
+    def __pullback_value_dt(self,dt,search_range, ticker):
         data = self.db.get_row_at_date(dt, ticker)
 
         for i in range(search_range):
@@ -105,7 +110,7 @@ class Algorithms:
         
 
 
-
+    #Initializer for sell order setup and delegates it to the order_management object
     def __initialize_sell_order(self, order_id, test_mode,dt) -> None:
         if(not test_mode): 
             self.order_management.sell_order(order_id,test_mode)
@@ -114,9 +119,10 @@ class Algorithms:
 
         
 
-
+    #Calculates stoploss, risk and the takeprofit value and
+    # initializes the buy order, delegating it to the order_management object
     def __initialize_buy_order(self, dt, current_close:float, ticker, test_mode) -> None:
-        stop_loss = self.__retrieve_value_dt(dt,const.EMA_200, ticker) #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
+        stop_loss = self.__retrieve_value_dt(dt,const.EMA_200, ticker)  #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
         risk = abs(current_close - stop_loss)
         take_profit = current_close + risk * const.RR_RATIO
         print("%s: Buying price %s at time %s"%(ticker, current_close, dt))
@@ -127,7 +133,7 @@ class Algorithms:
 
 
 
-
+    #Returns true if buy signal is found for specific date, else False
     def __buy_signal(self, dt:datetime, ticker:str):
         gen_trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
         macd_condition = self.__macd_crossover(dt, ticker) and self.__macd_under_zero_line(dt, ticker)
@@ -135,7 +141,7 @@ class Algorithms:
         return gen_trend_condition and macd_condition # and local_trend_condition):
 
 
-
+    #Returns true if sell signal is found for specific date, else False
     def __sell_signal(self,stop_loss:float, take_profit:float, current_close:float, dt:datetime): 
         dt_condition = dt.hour == 21 and dt.minute == 60 - const.TICKER_INTERVAL
         stop_loss_condition = current_close <= stop_loss 
@@ -143,7 +149,7 @@ class Algorithms:
         return  stop_loss_condition or profit_take_condition or dt_condition
 
 
-
+    #Buying strategy for algorithm
     def buy_strategy(self, dt, test_mode, ticker = "Data"):
         current_close = self.__retrieve_value_dt(dt,const.CLOSE,ticker)
 
@@ -151,7 +157,7 @@ class Algorithms:
             self.__initialize_buy_order(dt,current_close, ticker, test_mode)
 
 
-
+    #Sell strategy for algorithm
     def sell_strategy(self,dt, test_mode):
         for index, row in self.order_management.active_holdings.iterrows(): #
             ticker = row.get(0,"Ticker")
