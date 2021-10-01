@@ -34,14 +34,17 @@ class Test:
 
             self.algorithms.sell_strategy(date, True)  
                   
-        self.plot()
+        self.showResult()
 
 
 
-    def plot(self):
+    def showResult(self):
         closings = self.order_manag.previous_holdings
+        print("############################# RESULT #################################")
         for ticker in const.TICKERS:
             ticker_holdings = closings.loc[closings['Ticker'] == ticker]
+            profits_result = (ticker_holdings["Sell"] - ticker_holdings["Buy"]).sum()
+            print(ticker + ": " +  str(profits_result))
 
             ticker_sell_dates = ticker_holdings["Datetime Sell"].tolist()
             ticker_sell_prices = list(map(lambda x:self.db.get_row_at_date(x, ticker)[const.CLOSE].tolist()[0],ticker_sell_dates))
@@ -73,6 +76,7 @@ class Test:
             fig.update_layout(title=ticker)
             fig.update_xaxes(scaleratio=0.5,tickangle=-70,nticks=16)
             fig.show()
+        print("######################################################################")
 
 
 

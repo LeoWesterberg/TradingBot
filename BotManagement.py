@@ -35,21 +35,24 @@ class BotManagement:
     def run_bot(self) -> None:
         quit = False
         while(quit != True):
-            print("Backtest[press 0] | Deploy[press 1] | Quit[press 2]")
+            print("Backtest[press 0] | Deploy[press 1] | Quit[press 2] | Reset Bot[Press 3]")
             choise = input()
-            while(choise not in ['0', '1', '2']):
+            while(choise not in ['0', '1', '2' ,'3']):
                 print("Invalid option, try again!")
-                choise = int(input())
+                choise = input()
            
             if(choise == '0'):
                 test = Test(self.db, self.algorithms)
                 test.backTest()
 
-            if(choise == '1'): 
+            elif(choise == '1'): 
                 self.run_deploy()
                 
             elif(choise == '2'):
                 exit()
+
+            elif(choise == '3'):
+                self.reset_bot()
 
 
 

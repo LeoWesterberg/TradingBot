@@ -67,10 +67,10 @@ class OrderManagement:
                 return
             else: 
                 order_id = result
-                self.active_tickers[ticker] += 1
         else: 
             order_id = random.randint(1,1000)
-
+        
+        self.active_tickers[ticker] += 1
         buy_price = self.__get_stock_price(ticker) if not test_mode else self.db.get_row_at_date(dt,ticker)[const.CLOSE].tolist()[0]
         order_values = [ticker, order_id, dt, buy_price, stop_loss, profit_take]
 
@@ -86,10 +86,9 @@ class OrderManagement:
             result = self.__place_order(OrderType.SELL,1,ticker)
             if(result == "ERROR"):
                 return
-            else:
-                self.active_tickers[ticker] -= 1
+            
 
-
+        self.active_tickers[ticker] -= 1
         sell_price = self.__get_stock_price(ticker) if not test_mode else self.db.get_row_at_date(dt,ticker)[const.CLOSE].tolist()[0]
         extra_columns = DataFrame([[dt, sell_price]],columns=["Datetime Sell","Sell"])
             

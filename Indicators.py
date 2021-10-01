@@ -3,6 +3,8 @@ from pandas.core.frame import DataFrame
 import pandas as pd
 
 class Indicators:
+
+    # WANTED TO GET TO LEARN THE ALGORITHMS BUILDING FOR THE INDICATORS AND THEREFORE THEY ARE CODED MANUALLY AND NOT BY USING PANDAS
     
     def ema_init(self, data:DataFrame, window_size:int, attribute:str = "Close") -> DataFrame:
             initial_value = data[attribute][0:window_size].ewm(span=window_size, adjust=False).mean().tolist()[0]

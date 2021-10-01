@@ -66,6 +66,9 @@ class Algorithms:
     def __macd_under_zero_line(self,dt, ticker):
         return self.__retrieve_value_dt(dt,const.MACD, ticker) < 0
 
+    def __macd_under_signal_line(self,dt, ticker):
+        return self.__retrieve_value_dt(dt,const.MACD, ticker) < self.__retrieve_value_dt(dt,const.SIGNAL, ticker)
+
 
     #Returns the value from dataframe for the previous date given the a date.
     def __get_previous_date(self,dt, ticker):
@@ -125,7 +128,7 @@ class Algorithms:
         stop_loss = self.__retrieve_value_dt(dt,const.EMA_200, ticker)  #if (stop_loss == -1 or stop_loss < current_close) else stop_loss  
         risk = abs(current_close - stop_loss)
         take_profit = current_close + risk * const.RR_RATIO
-        print("%s: Buying price %s at time %s"%(ticker, current_close, dt))
+        print("%s: \t Time =  %s \t Buy = %s"%(ticker, dt, "{:.12f}".format(current_close)))
         if(not test_mode): 
             self.order_management.buy_order(stop_loss, take_profit, ticker, test_mode)
         else:
@@ -136,24 +139,23 @@ class Algorithms:
     #Returns true if buy signal is found for specific date, else False
     def __buy_signal(self, dt:datetime, ticker:str):
         gen_trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
-        macd_condition = self.__macd_crossover(dt, ticker) and self.__macd_under_zero_line(dt, ticker)
+        macd_condition2 = self.__macd_under_signal_line(dt, ticker)
+        #macd_condition = self.__macd_crossover(dt, ticker) and self.__macd_under_zero_line(dt, ticker)
         
-        return gen_trend_condition and macd_condition # and local_trend_condition):
+        return gen_trend_condition and macd_condition2 # and local_trend_condition):
 
 
     #Returns true if sell signal is found for specific date, else False
-    def __sell_signal(self,stop_loss:float, take_profit:float, current_close:float, dt:datetime): 
-        dt_condition = dt.hour == 21 and dt.minute == 60 - const.TICKER_INTERVAL
-        stop_loss_condition = current_close <= stop_loss 
-        profit_take_condition = current_close >= take_profit 
-        return  stop_loss_condition or profit_take_condition or dt_condition
+    def __sell_signal(self, ticker:str, dt:datetime): 
+         
+        return  not self.__macd_under_signal_line(dt, ticker)
 
 
     #Buying strategy for algorithm
     def buy_strategy(self, dt, test_mode, ticker = "Data"):
         current_close = self.__retrieve_value_dt(dt,const.CLOSE,ticker)
 
-        if(self.__buy_signal(dt, ticker)):
+        if(self.__buy_signal(dt, ticker) and self.order_management.active_tickers[ticker] < const.TICKER_MAX_HOLDINGS):
             self.__initialize_buy_order(dt,current_close, ticker, test_mode)
 
 
@@ -165,9 +167,9 @@ class Algorithms:
             if(self.db.get_row_at_date(dt, ticker).size != 0):
                 current_close = self.__retrieve_value_dt(dt,const.CLOSE, ticker)
 
-                if(self.__sell_signal(row["Stop loss"],row["Profit take"], current_close, dt)):
+                if(self.__sell_signal(ticker, dt)): #self.__sell_signal(row["Stop loss"],row["Profit take"], current_close, dt)):
                     self.__initialize_sell_order(row["Order id"],test_mode,dt)
-                    print("%s: Selling at time %s with: buy = %s, sell = %s, diff = %s, profit take= %s, stop loss =%s"%(ticker,dt,row["Buy"],current_close,current_close - row["Buy"], row["Profit take"], row["Stop loss"]))
+                    print("%s: \t Time = %s \t Sell = %s  \t diff = %s \t diff(%%): %s"%(ticker,dt,"{:.13f}".format(current_close),"{:.13f}".format(current_close - row["Buy"]),"{:.13f}".format(100*current_close/row["Buy"] - 100)))
                     
 
                 
