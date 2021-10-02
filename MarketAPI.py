@@ -2,13 +2,14 @@ import datetime, pytz, yfinance as yf
 
 from pandas.core.frame import DataFrame
 from Constants import Constants as const
+from Settings import Settings as st
 
 
 
 class MarketAPI:
     def __init__(self):
-        self.interval = '%sm'%const.TICKER_INTERVAL
-        self.period='%sd'%const.TICKER_PERIOD
+        self.interval = '%sm'%st.TICKER_INTERVAL
+        self.period='%sd'%st.TICKER_PERIOD
 
 
 
@@ -16,7 +17,7 @@ class MarketAPI:
         data = yf.download(tickers = ticker, period = self.period, interval = self.interval,threads=True, progress=False, show_errors= False)
         data = self.__apply_settings(data).rename(columns = {'Date': 'Datetime'})
         now = datetime.datetime.now().astimezone(pytz.timezone('Europe/Oslo'))
-        data = data[(now - data[const.DATETIME]).dt.total_seconds()/60 > const.TICKER_INTERVAL]       
+        data = data[(now - data[const.DATETIME]).dt.total_seconds()/60 > st.TICKER_INTERVAL]       
         return data
 
 
@@ -29,7 +30,7 @@ class MarketAPI:
 
         data = self.__apply_settings(data).rename(columns = {'Date': 'Datetime'})
         now = datetime.datetime.now().astimezone(pytz.timezone('Europe/Oslo'))
-        data = data[(now - data[const.DATETIME]).dt.total_seconds()/60 > const.TICKER_INTERVAL]       
+        data = data[(now - data[const.DATETIME]).dt.total_seconds()/60 > st.TICKER_INTERVAL]       
         return data
 
 

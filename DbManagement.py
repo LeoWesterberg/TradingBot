@@ -43,6 +43,9 @@ class DbManagement:
     def get_nbr_of_rows(self, table_name:str = "Data") -> int:
         return self.get_previous_row(table_name).at[0, const.INDEX]
 
+    def retrieve_value_dt(self, dt, attr:str, ticker):
+        return self.get_row_at_date(dt, ticker)[attr].values[0]
+
 
 
     def append_row(self,data:DataFrame, table_name:str = "Data"):
@@ -76,6 +79,8 @@ class DbManagement:
         result = cursor.fetchall()
         return self.__to_data_frame(result)
 
+    def get_last_value(self,attr:str,ticker) -> DataFrame:
+        return self.get_previous_row(ticker).at[0, attr]
 
 
     def get_table(self, table_name:str = "Data") -> DataFrame:

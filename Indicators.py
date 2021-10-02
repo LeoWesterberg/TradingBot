@@ -4,10 +4,11 @@ import pandas as pd
 
 class Indicators:
 
-    # WANTED TO GET TO LEARN THE ALGORITHMS BUILDING FOR THE INDICATORS AND THEREFORE THEY ARE CODED MANUALLY AND NOT BY USING PANDAS
+    # WANTED TO GET TO LEARN THE MATHEMATICS BEHIND THE INDICATORS AND 
+    # THEREFORE THEY ARE CODED MANUALLY AND NOT BY USING PANDAS MODULE FUNCTIONS
     
     def ema_init(self, data:DataFrame, window_size:int, attribute:str = "Close") -> DataFrame:
-            initial_value = data[attribute][0:window_size].ewm(span=window_size, adjust=False).mean().tolist()[0]
+            initial_value = data[attribute][0:window_size].ewm(span=window_size, adjust=False).mean().values[0]
             return self.__emaTemplate(data, initial_value, window_size, 0, attribute)
 
 
@@ -15,7 +16,6 @@ class Indicators:
     def update_ema(self,data:DataFrame, window_size:int, initial_ema:float, attribute:str = "Close") -> DataFrame:
         return self.__emaTemplate(data, initial_ema, window_size, 1,attribute)
     
-
 
     def rsi_init(self, data:DataFrame, period:int, attribute:str = 'Close') -> DataFrame:
         diff_attr = (data[attribute] - data[attribute].shift(periods=1)).shift(periods=-1)
