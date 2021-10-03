@@ -79,13 +79,21 @@ class DbManagement:
         result = cursor.fetchall()
         return self.__to_data_frame(result)
 
+
+
     def get_last_value(self,attr:str,ticker) -> DataFrame:
         return self.get_previous_row(ticker).at[0, attr]
+
 
 
     def get_table(self, table_name:str = "Data") -> DataFrame:
         return pd.read_sql_table(table_name, self.sql_alch_connection)
 
+
+
+    def get_prev_date(self, dt, table_name = "Data"):
+        previousIndex = self.retrieve_value_dt(dt,const.INDEX, table_name)  - 1  
+        return self.get_row_at_index(str(previousIndex),table_name)[const.DATETIME].tolist()[0]
 
 
     def __create_cursor(self):
@@ -103,7 +111,6 @@ class DbManagement:
         cursor = self.__create_cursor()
         cursor.execute(SQL, SQL_arguments)
         return cursor
-
 
 
     def __get_row_template(self,n:int, SQL, table_name:str) -> DataFrame:

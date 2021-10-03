@@ -47,7 +47,6 @@ class Test:
         for ticker in st.TICKERS:
                 date_row = self.db.get_row_at_date(date, ticker)
                 max_limit = self.nbr_active_tickers[ticker] >= st.TICKER_MAX_HOLDINGS
-
                 if(date_row.size != 0 and self.algorithms.buy_signal(date, ticker) and not max_limit):
                     
                     close = date_row[const.CLOSE].values[0]

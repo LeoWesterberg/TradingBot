@@ -6,7 +6,6 @@ from Indicators import Indicators
 from MarketAPI import MarketAPI
 from Constants import Constants as const
 from Settings import Settings as st
-
 from Test import Test
 
 class BotManagement:
@@ -68,6 +67,7 @@ class BotManagement:
                     self.initialize_run_bot()
                     print("Updated at date: %s"%(self.db.get_previous_row(st.TICKERS[0]).at[0,const.DATETIME]))
                     while(True):
+                        
                         update_tickers = list(filter(lambda elem: elem[1], self.update_bot().items())) 
                         if(len(update_tickers) != 0):
                             for ticker in update_tickers:
@@ -180,4 +180,8 @@ class BotManagement:
 
 
         
+    def spinning_cursor():
+        while True:
+            for cursor in '|/-\\':
+                yield cursor
 

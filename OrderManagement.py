@@ -90,7 +90,10 @@ class OrderManagement:
         
         if(result == "ERROR"):
              return
-        print("%s: \t Time = %s \t Sell = %s  \t diff = %s \t diff(%%): %s"%(ticker,datetime.datetime.now(),"{:.13f}".format(sell_price),"{:.13f}".format(datetime.datetime.now() - order["Buy"]),"{:.13f}".format(100*sell_price/order["Buy"] - 100)))
+        print("%s: \t Time = %s \t Sell = %s  \t diff = %s \t diff(%%): %s"%(ticker,datetime.datetime.now(),
+                        "{:.13f}".format(sell_price),
+                        "{:.13f}".format(datetime.datetime.now() - order["Buy"]),
+                        "{:.13f}".format(100*sell_price/order["Buy"] - 100)))
 
         
 
