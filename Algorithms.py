@@ -59,17 +59,17 @@ class Algorithms:
 
     #Returns true if buy signal is found for specific date, else False
     def buy_signal(self, dt:datetime, ticker:str):
-        trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
+        #trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
         macd_cross_over = self.__macd_crossover(dt, ticker)    
         under_zero_line = self.__macd_under_zero_line(self.db.get_prev_date(dt, ticker),ticker)    
-        return trend_condition and macd_cross_over and under_zero_line and self.__rsi_under_limit(dt, ticker)
+        return macd_cross_over and under_zero_line and self.__rsi_under_limit(dt, ticker)
 
     #Returns true if sell signal is found for specific date, else False
     def sell_signal(self, ticker:str, dt:datetime): 
-        trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
+        #trend_condition = self.__attr1_over_attr2(const.CLOSE,const.EMA_200,dt, ticker)
         signal_cross_over = self.__signal_crossover(dt,ticker)
         over_zero_line = not self.__macd_under_zero_line(self.db.get_prev_date(dt, ticker),ticker)
-        return  signal_cross_over and over_zero_line and self.__rsi_over_limit(dt,ticker) or not trend_condition
+        return  signal_cross_over and over_zero_line and self.__rsi_over_limit(dt,ticker) 
 
 
     #Buying strategy for algorithm
@@ -93,9 +93,6 @@ class Algorithms:
 
                 
             
-            
-
-
             
 
 

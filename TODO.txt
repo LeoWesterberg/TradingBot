@@ -1,4 +1,0 @@
-* Fix locked order if stock has no update
-* Add stoploss at pullback values
-
-

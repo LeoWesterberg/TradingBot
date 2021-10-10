@@ -33,6 +33,3 @@ class Constants:
     PREV_ORDER_COLUMNS =   ACTIVE_ORDER_COLUMNS + ["Datetime Sell","Sell"]
 
 
-    def get_indicator_index(self, attribute:str) -> int:
-        return self.ACTIVE_INDICATORS.index(attribute)
-

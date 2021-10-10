@@ -119,12 +119,12 @@ class BotManagement:
 
             def __update_ema(attribute:str, data=data):
                 window_size = int(attribute.split(" ")[1])
-                return self.indicator.update_ema(data,window_size,prev_indicators[const.get_indicator_index(attribute)])
+                return self.indicator.update_ema(data,window_size,prev_indicators[self.get_indicator_index(attribute)])
             
 
             def __update_ema_rsi(ema_window):
                 column_name = "Ema %s(Rsi %s)"%(ema_window, st.RSI_PERIOD)
-                prev_ema_rsi = prev_indicators[const.get_indicator_index(const.RSI_SMOOTH)]
+                prev_ema_rsi = prev_indicators[self.get_indicator_index(const.RSI_SMOOTH)]
                 smooth_rsi_res = self.indicator.update_ema(__update_rsi(), ema_window, prev_ema_rsi, const.RSI)
                 smooth_rsi_res = smooth_rsi_res.rename(columns={"Ema %s"%ema_window:column_name})
                 return smooth_rsi_res
@@ -159,7 +159,7 @@ class BotManagement:
                     result = pd.concat([result,macd_line],axis=1)
                     
                 elif(indicator == "Signal"): #Must calculate MACD line first
-                    prev_signal = prev_indicators[const.get_indicator_index(const.SIGNAL)]
+                    prev_signal = prev_indicators[self.get_indicator_index(const.SIGNAL)]
                     signal = self.indicator.update_ema(result,9,prev_signal,const.MACD)
                     signal = signal.rename(columns={"Ema 9":const.SIGNAL})
                     result = pd.concat([result,signal],axis=1)
@@ -177,11 +177,6 @@ class BotManagement:
             res.index = range(last_index+1,last_index+len(res)+1)
             self.db.append_row(res, "%s"%ticker)
         return has_update
-
-
-        
-    def spinning_cursor():
-        while True:
-            for cursor in '|/-\\':
-                yield cursor
-
+    
+    def get_indicator_index(self, attribute:str) -> int:
+        return const.ACTIVE_INDICATORS.index(attribute)
