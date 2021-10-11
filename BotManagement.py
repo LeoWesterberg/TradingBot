@@ -7,6 +7,8 @@ from MarketAPI import MarketAPI
 from Constants import Constants as const
 from Settings import Settings as st
 from Test import Test
+import time, sys
+
 
 class BotManagement:
 
@@ -67,14 +69,18 @@ class BotManagement:
                     self.initialize_run_bot()
                     print("Updated at date: %s"%(self.db.get_previous_row(st.TICKERS[0]).at[0,const.DATETIME]))
                     while(True):
-                        
                         update_tickers = list(filter(lambda elem: elem[1], self.update_bot().items())) 
                         if(len(update_tickers) != 0):
+                            print("\nUpdated at date: %s"%(self.db.get_previous_row(update_tickers[0][0]).at[0,const.DATETIME]))
                             for ticker in update_tickers:
-                                    self.algorithms.buy_strategy(ticker)
-                                    self.algorithms.sell_strategy()
-                            time.sleep(60)
-                            print(".")    
+                                ticker = ticker[0]
+                                self.algorithms.buy_strategy(ticker)
+                                self.algorithms.sell_strategy()
+                        
+                        time.sleep(60)
+                        print(".", end =" ")   
+                        sys.stdout.flush()
+                        
                 except KeyboardInterrupt:
                     self.algorithms.order_management.active_holdings.reset_index(drop=True,inplace=False)
                     self.algorithms.order_management.previous_holdings.reset_index(drop=True,inplace=False)
