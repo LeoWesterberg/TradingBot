@@ -21,7 +21,7 @@ class OrderManagement:
 
     #Returns order id if successful, else ERROR
     def __place_order(self, type:OrderType,  volume:int, ticker:str):
-        if(self.avanza == None):
+        if(self.avanza is None):
             self.avanza = Avanza({
         'username': Auth.AVANZA_USERNAME,
         'password': Auth.AVANZA_PASSWORD,

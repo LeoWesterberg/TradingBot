@@ -40,7 +40,7 @@ class BotManagement:
     # and state between a time interval
     def run_bot(self) -> None:
         quit = False
-        while(quit != True):
+        while(quit is not True):
             print("Backtest [press 0] | Deploy [press 1] | Apply settings [Press 2] | Exit [Press Ctrl + c]")
             choise = input()
             while(choise not in ['0', '1', '2' ,'3']):
