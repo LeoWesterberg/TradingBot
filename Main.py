@@ -1,6 +1,6 @@
 from BotManagement import BotManagement
 class main:
-    def main():
+    def main(self):
     
         bot = BotManagement()
         bot.run_bot()
