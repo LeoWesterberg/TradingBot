@@ -7,7 +7,7 @@ from MarketAPI import MarketAPI
 from Constants import Constants as const
 from Settings import Settings as st
 from Test import Test
-import time, sys
+import sys
 
 
 class BotManagement:
